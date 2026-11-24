@@ -17,6 +17,7 @@ playing when the phone is not nearby.
 - Real-time DSP with biquad filters and limiter in the watch playback pipeline.
 - Local EQ listening statistics, returned to the phone via the Wear Data Layer.
 - OLED-friendly display, no permanent animations and power-conscious display refresh.
+- Complete English UI with English status messages and date formatting.
 - Settings page with phone status, profile request, storage usage and library reload.
 
 ## Synchronisation
@@ -51,8 +52,9 @@ gradlew.bat app:testDebugUnitTest
 gradlew.bat app:assembleDebug app:lintDebug
 ```
 
-Current status: **150 tests, 0 failures**; lint has 0 errors with dependency/version warnings. A
-locally signed release APK is installed on the real watch. See
+Current status: **150 tests, 0 failures**; lint has 0 errors with dependency/version warnings.
+The signed release **1.0.1** was verified on a Wear OS emulator; earlier signed releases were
+installed on the real watch. See
 [`../docs/BUILD.md`](../docs/BUILD.md) for signing and deployment.
 
 ## Protocol overview

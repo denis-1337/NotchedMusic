@@ -24,11 +24,11 @@ enum class AmbientAnzeige {
 
   /** Beschriftung des Knopfs auf der Einstellungsseite. */
   fun label(): String =
-    "Gedimmt: " +
+    "Dimmed: " +
       when (this) {
-        AUS -> "aus"
-        SCHMAL -> "schmal"
-        VOLL -> "voll"
+        AUS -> "off"
+        SCHMAL -> "narrow"
+        VOLL -> "full"
       }
 
   companion object {

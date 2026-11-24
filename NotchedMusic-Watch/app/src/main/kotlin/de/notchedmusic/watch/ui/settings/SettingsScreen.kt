@@ -72,9 +72,9 @@ fun SettingsScreen(
     onAmbientAnzeigeWechseln = viewModel::cycleAmbientAnzeige,
     onRescan = onRescan,
     onRequestProfiles = {
-      hinweis = "Anfrage läuft…"
+      hinweis = "Request running…"
       PhoneLink.fordereProfileAn(context) { erfolgreich, grund ->
-        hinweis = if (erfolgreich) "Anfrage an das Handy geschickt" else (grund ?: "Anfrage fehlgeschlagen")
+        hinweis = if (erfolgreich) "Request sent to the phone" else (grund ?: "Request failed")
       }
     },
     modifier = modifier,
@@ -112,13 +112,13 @@ internal fun SettingsScreen(
               .minimumVerticalContentPadding(ListHeaderDefaults.minimumTopListContentPadding),
           transformation = SurfaceTransformation(transformationSpec),
         ) {
-          Text(text = "Einstellungen", color = Akzent)
+          Text(text = "Settings", color = Akzent)
         }
       }
 
       item {
         Text(
-          text = "Lautstärke · ${VolumeScale.percent(settings.volumeDb)} %",
+          text = "Volume · ${VolumeScale.percent(settings.volumeDb)} %",
           style = MaterialTheme.typography.bodySmall,
           modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
         )
@@ -137,7 +137,7 @@ internal fun SettingsScreen(
 
       item {
         Text(
-          text = "Anzeige",
+          text = "Display",
           style = MaterialTheme.typography.bodySmall,
           modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
         )
@@ -148,7 +148,7 @@ internal fun SettingsScreen(
           onClick = { onKeepScreenOnChange(!settings.keepScreenOn) },
           colors = chipButtonColors(),
           label = {
-            Text(if (settings.keepScreenOn) "Bildschirm bleibt an" else "Bildschirm darf aus")
+            Text(if (settings.keepScreenOn) "Screen stays on" else "Screen may turn off")
           },
           transformation = SurfaceTransformation(transformationSpec),
           modifier =
@@ -175,7 +175,7 @@ internal fun SettingsScreen(
 
       item {
         Text(
-          text = "Handy",
+          text = "Phone",
           style = MaterialTheme.typography.bodySmall,
           modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
         )
@@ -192,7 +192,7 @@ internal fun SettingsScreen(
       if (settings.lastSyncError != null) {
         item {
           Text(
-            text = "Letzter Fehler: ${settings.lastSyncError}",
+            text = "Last error: ${settings.lastSyncError}",
             style = MaterialTheme.typography.bodySmall,
             color = Akzent,
             modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
@@ -204,7 +204,7 @@ internal fun SettingsScreen(
         Button(
           onClick = onRequestProfiles,
           colors = chipButtonColors(),
-          label = { Text("Profile anfordern", maxLines = 1) },
+          label = { Text("Request profiles", maxLines = 1) },
           transformation = SurfaceTransformation(transformationSpec),
           modifier =
             Modifier.fillMaxWidth()
@@ -226,7 +226,7 @@ internal fun SettingsScreen(
 
       item {
         Text(
-          text = "Musik",
+          text = "Music",
           style = MaterialTheme.typography.bodySmall,
           modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
         )
@@ -244,7 +244,7 @@ internal fun SettingsScreen(
         Button(
           onClick = onRescan,
           colors = chipButtonColors(),
-          label = { Text("Neu laden") },
+          label = { Text("Refresh") },
           transformation = SurfaceTransformation(transformationSpec),
           modifier =
             Modifier.fillMaxWidth()
@@ -259,23 +259,23 @@ internal fun SettingsScreen(
 private fun phoneStatusText(reachable: Boolean?, settings: WatchSettings): String {
   val verbindung =
     when (reachable) {
-      true -> "verbunden"
-      false -> "nicht erreichbar"
-      null -> "wird geprüft"
+      true -> "connected"
+      false -> "not reachable"
+      null -> "checking"
     }
   val presets =
     if (settings.lastPresetUpdateMs <= 0L) {
-      "noch keine"
+      "not yet"
     } else {
       ZEITPUNKT_FORMAT.format(Instant.ofEpochMilli(settings.lastPresetUpdateMs))
     }
   val musik =
     if (settings.lastMusicUpdateMs <= 0L) {
-      "noch keine"
+      "not yet"
     } else {
       ZEITPUNKT_FORMAT.format(Instant.ofEpochMilli(settings.lastMusicUpdateMs))
     }
-  return listOf(verbindung, "Presets: $presets", "Musik: $musik")
+  return listOf(verbindung, "Presets: $presets", "Music: $musik")
     .joinToString(System.lineSeparator())
 }
 
@@ -284,13 +284,13 @@ private fun storageText(path: String): String {
   val freiMb = folder.usableSpace / (1024L * 1024L)
   val frei =
     if (freiMb >= 1024L) {
-      String.format(Locale.GERMAN, "%.1f GB", freiMb / 1024.0)
+      String.format(Locale.ENGLISH, "%.1f GB", freiMb / 1024.0)
     } else {
       "$freiMb MB"
     }
   val dateien = MusicMirrorCounter.count(path)
-  val anzahl = if (dateien == 1) "1 Datei" else "$dateien Dateien"
-  return "$anzahl · $frei frei"
+  val anzahl = if (dateien == 1) "1 file" else "$dateien files"
+  return "$anzahl · $frei free"
 }
 
 /** Kleine, rekursive Zählung – die Einstellungsseite soll nicht die ganze Bibliothek bauen. */
@@ -303,7 +303,7 @@ private object MusicMirrorCounter {
 }
 
 private val ZEITPUNKT_FORMAT: DateTimeFormatter =
-  DateTimeFormatter.ofPattern("dd.MM. HH:mm", Locale.GERMAN)
+  DateTimeFormatter.ofPattern("dd MMM HH:mm", Locale.ENGLISH)
     .withZone(ZoneId.systemDefault())
 
 @WearPreviewDevices
@@ -314,8 +314,8 @@ private fun SettingsScreenPreview() {
       settings = WatchSettings(),
       libraryPath = "Android/data/de.notchedmusic.phone/files/Music",
       phoneReachable = true,
-      hinweis = "Anfrage an das Handy geschickt",
-      storageText = "12 Dateien · 18,0 GB frei",
+      hinweis = "Request sent to the phone",
+      storageText = "12 files · 18.0 GB free",
       onVolumeChange = {},
       onKeepScreenOnChange = {},
       onAmbientAnzeigeWechseln = {},

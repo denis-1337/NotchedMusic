@@ -84,9 +84,9 @@ internal fun AlbumScreen(
         ) {
           Text(
             text = when (state) {
-              AlbumListUiState.Loading -> "Suche Musik…"
-              AlbumListUiState.NoMusic -> "Keine Musik"
-              is AlbumListUiState.Albums -> "${state.albums.size} Alben"
+              AlbumListUiState.Loading -> "Searching music…"
+              AlbumListUiState.NoMusic -> "No music"
+              is AlbumListUiState.Albums -> "${state.albums.size} albums"
             },
             color = Akzent,
           )
@@ -99,7 +99,7 @@ internal fun AlbumScreen(
         AlbumListUiState.NoMusic -> {
           item {
             Text(
-              text = "Musik per Sync vom Handy schicken – die Titel erscheinen danach hier.",
+              text = "Send music from the phone via sync – tracks will appear here.",
               style = MaterialTheme.typography.bodySmall,
               modifier = Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
             )
@@ -118,7 +118,9 @@ internal fun AlbumScreen(
                   overflow = TextOverflow.Ellipsis,
                 )
               },
-              secondaryLabel = { Text("${album.tracks.size} Titel") },
+              secondaryLabel = {
+                Text(if (album.tracks.size == 1) "1 track" else "${album.tracks.size} tracks")
+              },
               transformation = SurfaceTransformation(transformationSpec),
               modifier =
                 Modifier.fillMaxWidth()
@@ -133,7 +135,7 @@ internal fun AlbumScreen(
         Button(
           onClick = onRefresh,
           colors = chipButtonColors(),
-          label = { Text("Neu laden") },
+          label = { Text("Refresh") },
           transformation = SurfaceTransformation(transformationSpec),
           modifier =
             Modifier.fillMaxWidth()
@@ -159,7 +161,7 @@ internal fun AlbumScreen(
         Button(
           onClick = onOpenSettings,
           colors = chipButtonColors(),
-          label = { Text("Einstellungen") },
+          label = { Text("Settings") },
           transformation = SurfaceTransformation(transformationSpec),
           modifier =
             Modifier.fillMaxWidth()
@@ -221,14 +223,14 @@ fun TrackScreen(
   }
 }
 
-private val PREVIEW_TRACKS = listOf(Track("Morgen", "/a"), Track("Regen", "/b"))
+private val PREVIEW_TRACKS = listOf(Track("Morning", "/a"), Track("Rain", "/b"))
 
 @WearPreviewDevices
 @Composable
 private fun AlbumScreenPreview() {
   NotchedMusicTheme {
     AlbumScreen(
-      state = AlbumListUiState.Albums(listOf(Album("Morgen", PREVIEW_TRACKS), Album("Regen", PREVIEW_TRACKS))),
+      state = AlbumListUiState.Albums(listOf(Album("Morning", PREVIEW_TRACKS), Album("Rain", PREVIEW_TRACKS))),
       onOpenAlbum = {},
       onRefresh = {},
       onOpenEq = {},

@@ -77,7 +77,7 @@ internal fun EqScreen(
 
       item {
         ModeButton(
-          label = "Aus",
+          label = "Off",
           isActive = settings.activePresetId == null,
           onClick = { onSelectPreset(null) },
           transformationSpec = transformationSpec,
@@ -112,7 +112,7 @@ private fun TransformingLazyColumnItemScope.ModeButton(
     colors = chipButtonColors(),
     label = {
       Text(
-        text = if (isActive) "$label · aktiv" else label,
+        text = if (isActive) "$label · active" else label,
         color = if (isActive) Akzent else Color.Unspecified,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

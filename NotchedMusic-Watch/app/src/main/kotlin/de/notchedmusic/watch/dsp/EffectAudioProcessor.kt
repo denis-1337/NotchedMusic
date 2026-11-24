@@ -29,7 +29,7 @@ class EffectAudioProcessor : BaseAudioProcessor() {
   private var samples = FloatArray(0)
 
   /** Aktuelles Klangrezept; ein leeres Preset ist der Bypass-Zustand. */
-  @Volatile var preset: EqPreset = EqPreset(id = "off", name = "Aus")
+  @Volatile var preset: EqPreset = EqPreset(id = "off", name = "Off")
     set(value) {
       field = value
       presetVersion.incrementAndGet()

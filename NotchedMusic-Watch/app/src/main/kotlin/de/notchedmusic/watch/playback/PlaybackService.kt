@@ -59,7 +59,7 @@ class PlaybackService : MediaSessionService() {
 
     val processor =
       EffectAudioProcessor().apply {
-        preset = FilterSettings.activePreset() ?: EqPreset(id = "off", name = "Aus")
+        preset = FilterSettings.activePreset() ?: EqPreset(id = "off", name = "Off")
         bypass = FilterSettings.current().activePresetId == null
         volumeDb = FilterSettings.current().volumeDb
       }
@@ -75,7 +75,7 @@ class PlaybackService : MediaSessionService() {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     scope.launch {
       FilterSettings.settings.collect { settings ->
-        processor.preset = settings.activePreset() ?: EqPreset(id = "off", name = "Aus")
+        processor.preset = settings.activePreset() ?: EqPreset(id = "off", name = "Off")
         processor.bypass = settings.activePresetId == null
         processor.volumeDb = settings.volumeDb
         stats.setEqOn(settings.activePresetId != null)

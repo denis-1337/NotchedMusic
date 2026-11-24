@@ -1,7 +1,7 @@
 # Project Status – NotchedMusic
 
-> **This file is the entry point for each new session.** Last updated: 11/20/2026,
-> after statistics recording on the watch, statistics sync protocol and phone merge. Rules: update
+> **This file is the entry point for each new session.** Last updated: 11/24/2026,
+> after statistics recording on the watch, statistics sync protocol, phone merge and the English watch UI. Rules: update
 > this file after every completed step; change `plan.md` only after consultation.
 
 ## Short version to get you started
@@ -19,7 +19,8 @@ the Phone app (`de.notchedmusic.phone`) is the editor for **three presets** and 
   deletes its snapshot only after the phone sends a `STATUS_APPLIED` ACK; without ACK the data
   remains available for another attempt.
 * **Build/Test:** `assembleDebug` and `assembleRelease` green, **150 / 150 JVM tests green**,
-  Lint 0 errors. The release APK is signed with local key and installed on the watch.
+  Lint 0 errors. The signed release **1.0.1** was verified on a Wear OS emulator; earlier release
+  builds were installed on the real TicWatch Pro 5.
 * **Power saving:** The two Data Layer receivers are disabled in the manifest (`enabled="false"`)
   and are opened by `SyncReception` only when the app is open or data arrives (90 s receiver
   window). During a music mirroring session, the phone refreshes a **30-minute fallback window**
@@ -316,6 +317,18 @@ Repeated broadcasts are therefore almost free. Always use new file contents for 
   gave the same result.
 * Acceptance of TicWatch Pro 5: `punk_rock / you can't stop me` selected, ended with `force-stop` and
   restarted - Now-Playing reopened "you can't stop me", **paused**.
+
+### English watch UI (11/24/2026, Wear OS emulator)
+
+* Album list, player, EQ page and settings use English labels, status messages and accessibility
+  descriptions (`Searching music…`, `No music`, `No track`, `Volume`, `Display`, `Phone`,
+  `Request profiles`, `Music`).
+* User messages and default names are English (`No phone reachable`, `Request not delivered`,
+  `Off`, `(no album)`, `unnamed`). Date/storage formatting uses `Locale.ENGLISH`; track counts use
+  `1 track` / `N tracks`.
+* The signed watch release **1.0.1** was installed on the Wear OS Large Round emulator (API 33).
+  The album list, now playing, EQ and settings pages were checked with uiautomator; German UI text
+  no longer appears. JVM tests remain **150/150**, lint 0 errors.
 
 ### EQ statistics on the watch (11/20/2026, watch emulator and real devices)
 

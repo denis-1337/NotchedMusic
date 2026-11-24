@@ -139,7 +139,7 @@ private fun AppNavigation() {
         entry<Scene.Tracks> { key ->
           val album = albumViewModel.albumNamed(key.albumName)
           if (album == null) {
-            Text("Album nicht mehr vorhanden")
+            Text("Album no longer available")
           } else {
             TrackScreen(
               album = album,

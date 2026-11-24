@@ -61,8 +61,8 @@ without the smartphone nearby.
 Ready-to-install signed APKs are attached to the repository releases, so no development setup is
 required:
 
-- [**NotchedMusic v1.0.2 release**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.2)
-  — phone 1.0.2 APK, watch APK and SHA-256 checksums.
+- [**NotchedMusic v1.0.3 release**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.3)
+  — phone 1.0.2 APK, watch 1.0.1 APK and SHA-256 checksums.
 
 Download the phone APK and the watch APK and install them with Android's package installer. The watch app is a standalone player with its own real-time notch filtering; it does not
 need the phone nearby for playback. A release also includes the current compiled APK binaries for
@@ -115,9 +115,9 @@ from Git.
   the real Pixel 10 with signed release APKs. Version 1.0.1 additionally restores a missing playback
   service before playback, so screen-lock protection also applies after a locked install or a
   service restart.
-- **User interface:** the complete phone UI is English; all labels, status messages, chart labels
-  and date formats were translated for version 1.0.2. The translated Player tab was checked on the
-  real Pixel 10, and all main tabs on the API 37 emulator.
+- **User interface:** the complete phone and watch UIs are English; all labels, status messages,
+  chart labels and date formats were translated. The phone UI was checked on the real Pixel 10 and
+  on the API 37 emulator; the watch UI was checked on the Wear OS Large Round emulator.
 
 ## Screenshots
 

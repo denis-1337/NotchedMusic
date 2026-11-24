@@ -187,7 +187,7 @@ internal fun NowPlayingScreen(
         }
 
         Text(
-          text = playback.currentTitle ?: "Kein Titel",
+          text = playback.currentTitle ?: "No track",
           style = MaterialTheme.typography.titleMedium,
           color = Akzent,
           textAlign = TextAlign.Center,
@@ -211,10 +211,10 @@ internal fun NowPlayingScreen(
           CompactButton(
             onClick = onPrevious,
             onLongClick = onPreviousAlbum,
-            onLongClickLabel = "Ganzer Ordner zurück",
+            onLongClickLabel = "Previous album",
             colors = chipButtonColors(),
             label = { Text("◀", style = MaterialTheme.typography.titleSmall) },
-            modifier = Modifier.weight(1f).semantics { contentDescription = "Vorheriger Titel" },
+            modifier = Modifier.weight(1f).semantics { contentDescription = "Previous track" },
           )
           CompactButton(
             onClick = onTogglePlayPause,
@@ -224,22 +224,22 @@ internal fun NowPlayingScreen(
             },
             modifier =
               Modifier.weight(1f).semantics {
-                contentDescription = if (playback.isPlaying) "Pause" else "Wiedergabe"
+                contentDescription = if (playback.isPlaying) "Pause" else "Play"
               },
           )
           CompactButton(
             onClick = onNext,
             onLongClick = onNextAlbum,
-            onLongClickLabel = "Ganzer Ordner weiter",
+            onLongClickLabel = "Next album",
             colors = chipButtonColors(),
             label = { Text("▶", style = MaterialTheme.typography.titleSmall) },
-            modifier = Modifier.weight(1f).semantics { contentDescription = "Nächster Titel" },
+            modifier = Modifier.weight(1f).semantics { contentDescription = "Next track" },
           )
         }
 
         Column(modifier = Modifier.fillMaxWidth(0.75f)) {
           Text(
-            text = "Lautstärke · ${VolumeScale.percent(volumeDb)} %",
+            text = "Volume · ${VolumeScale.percent(volumeDb)} %",
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
           )
@@ -260,7 +260,7 @@ internal fun NowPlayingScreen(
         modifier = Modifier.align(Alignment.Center),
       ) {
         Text(
-          text = "Lautstärke · ${VolumeScale.percent(volumeDb)} %",
+          text = "Volume · ${VolumeScale.percent(volumeDb)} %",
           style = MaterialTheme.typography.titleMedium,
           color = Akzent,
         )
@@ -331,7 +331,7 @@ private fun PlaybackUiState.progressFraction(): Float =
 
 /** Beschriftung des Modus-Knopfs: Name des aktiven Presets oder „Aus". */
 private fun modusText(settings: WatchSettings): String =
-  settings.activePreset()?.name ?: "EQ · Aus"
+  settings.activePreset()?.name ?: "EQ · Off"
 
 @Composable
 private fun AmbientPlayer(playback: PlaybackUiState, modifier: Modifier = Modifier) {
@@ -347,7 +347,7 @@ private fun AmbientPlayer(playback: PlaybackUiState, modifier: Modifier = Modifi
     )
 
     Text(
-      text = playback.currentTitle ?: "Kein Titel",
+      text = playback.currentTitle ?: "No track",
       style = MaterialTheme.typography.titleMedium,
       color = AmbientSchrift,
       textAlign = TextAlign.Center,
@@ -415,7 +415,7 @@ private val NowPlayingPreviewState =
   PlaybackUiState(
     isConnected = true,
     isPlaying = true,
-    currentTitle = "Morgen",
+    currentTitle = "Morning",
     positionMs = 12_000,
     durationMs = 240_000,
   )

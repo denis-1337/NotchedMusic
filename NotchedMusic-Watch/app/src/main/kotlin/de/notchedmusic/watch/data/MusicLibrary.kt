@@ -145,7 +145,7 @@ class MusicLibrary(private val musicDir: File) {
     private val SUPPORTED_EXTENSIONS = setOf("mp3", "m4a", "aac", "ogg", "oga", "opus", "flac", "wav")
 
     /** Album-Name für Titel, die direkt im Musik-Root liegen. */
-    const val LOOSE_TRACKS_NAME = "(ohne Album)"
+    const val LOOSE_TRACKS_NAME = "(no album)"
 
     /** Höchste Unterordner-Ebene innerhalb eines Albums (gegen Fehlerbäume). */
     const val MAX_DEPTH = 6

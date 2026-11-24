@@ -13,7 +13,7 @@ import java.security.MessageDigest
  */
 object MusicMirror {
 
-  const val LOOSE_ALBUM = "(ohne Album)"
+  const val LOOSE_ALBUM = "(no album)"
   const val MAX_NAME_LENGTH = 120
   const val MIN_FREE_BYTES = 100L * 1024L * 1024L
 
@@ -28,7 +28,7 @@ object MusicMirror {
         .replace('\u0000', '_')
         .replace("..", "_")
     while (name.startsWith('.')) name = "_" + name.removePrefix(".")
-    name = name.trim().ifEmpty { "unbenannt" }
+    name = name.trim().ifEmpty { "unnamed" }
     return name.take(MAX_NAME_LENGTH)
   }
 

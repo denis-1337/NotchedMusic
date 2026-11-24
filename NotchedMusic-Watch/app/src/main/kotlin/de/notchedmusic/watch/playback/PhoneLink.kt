@@ -55,7 +55,7 @@ object PhoneLink {
     val appContext = context.applicationContext
     findPhoneNode(appContext, attemptsLeft = 3) { nodeId ->
       if (nodeId == null) {
-        onResult(false, "Kein Handy erreichbar")
+        onResult(false, "No phone reachable")
       } else {
         sendRequest(appContext, nodeId, onResult)
       }
@@ -68,7 +68,7 @@ object PhoneLink {
       .addOnSuccessListener { onResult(true, null) }
       .addOnFailureListener { ausnahme ->
         Log.w(TAG, "Anfrage nicht zugestellt", ausnahme)
-        onResult(false, "Anfrage nicht zugestellt")
+        onResult(false, "Request not delivered")
       }
   }
 

@@ -5,12 +5,12 @@ or Gradle experience can install NotchedMusic directly.
 
 ## Current release
 
-[**NotchedMusic v1.0.2**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.2)
+[**NotchedMusic v1.0.3**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.3)
 
 | Asset | Device |
 |---|---|
 | `NotchedMusic-Phone-1.0.2.apk` | Pixel 10 / Android 17 |
-| `NotchedMusic-Watch-1.0.apk` | TicWatch Pro 5 / Wear OS 4 |
+| `NotchedMusic-Watch-1.0.1.apk` | TicWatch Pro 5 / Wear OS 4 |
 | `SHA256SUMS` | SHA-256 checksums |
 
 The release is private together with the repository.
@@ -20,7 +20,7 @@ The release is private together with the repository.
 1. Open the release page and download the APK for the phone.
 2. Open the downloaded file on the phone and allow installation from the file manager/browser if
    prompted.
-3. On the watch, download `NotchedMusic-Watch-1.0.apk` and install it with the Wear OS package installer.
+3. On the watch, download `NotchedMusic-Watch-1.0.1.apk` and install it with the Wear OS package installer.
 4. Open the phone app first and complete the music-folder setup.
 
 Both APKs are signed with the same project key. The watch APK deliberately uses the phone's package
@@ -33,12 +33,15 @@ identity (`de.notchedmusic.phone`) but launches the Wear activity
 adb -s <phone> install -r NotchedMusic-Phone-1.0.2.apk
 adb -s <phone> shell am start -n de.notchedmusic.phone/.MainActivity
 
-adb -s <watch> install -r NotchedMusic-Watch-1.0.apk
+adb -s <watch> install -r NotchedMusic-Watch-1.0.1.apk
 adb -s <watch> shell am start -n de.notchedmusic.phone/de.notchedmusic.watch.MainActivity
 ```
 
 ## Latest changes
 
+- **v1.0.3:** complete English watch UI: album, player, EQ, settings, error and status messages,
+  date formats and track counts. The phone APK stays at 1.0.2, which already has the English UI
+  and the playback-service startup fix.
 - **v1.0.2:** complete English phone UI: labels, status messages, chart labels, dates and the
   statistics view. Includes the playback-service startup fix from 1.0.1.
 - **v1.0.1:** playback service is re-started from the activity and before playback, fixing the

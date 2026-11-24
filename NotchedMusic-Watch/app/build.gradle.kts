@@ -16,8 +16,8 @@ android {
     // 33 = Wear OS 4, damit auch der Wear-OS-4-Emulator die App installiert.
     minSdk = 33
     targetSdk = 37
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 2
+    versionName = "1.0.1"
   }
 
   buildTypes {
