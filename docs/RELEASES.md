@@ -5,11 +5,11 @@ or Gradle experience can install NotchedMusic directly.
 
 ## Current release
 
-[**NotchedMusic v1.0**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0)
+[**NotchedMusic v1.0.1**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.1)
 
 | Asset | Device |
 |---|---|
-| `NotchedMusic-Phone-1.0.apk` | Pixel 10 / Android 17 |
+| `NotchedMusic-Phone-1.0.1.apk` | Pixel 10 / Android 17 |
 | `NotchedMusic-Watch-1.0.apk` | TicWatch Pro 5 / Wear OS 4 |
 | `SHA256SUMS` | SHA-256 checksums |
 
@@ -20,8 +20,7 @@ The release is private together with the repository.
 1. Open the release page and download the APK for the phone.
 2. Open the downloaded file on the phone and allow installation from the file manager/browser if
    prompted.
-3. On the watch, download `NotchedMusic-Watch-1.0.apk` and install it with the Wear OS package
-   installer.
+3. On the watch, download `NotchedMusic-Watch-1.0.apk` and install it with the Wear OS package installer.
 4. Open the phone app first and complete the music-folder setup.
 
 Both APKs are signed with the same project key. The watch APK deliberately uses the phone's package
@@ -31,12 +30,18 @@ identity (`de.notchedmusic.phone`) but launches the Wear activity
 ## adb installation (development)
 
 ```bat
-adb -s <phone> install -r NotchedMusic-Phone-1.0.apk
+adb -s <phone> install -r NotchedMusic-Phone-1.0.1.apk
 adb -s <phone> shell am start -n de.notchedmusic.phone/.MainActivity
 
 adb -s <watch> install -r NotchedMusic-Watch-1.0.apk
 adb -s <watch> shell am start -n de.notchedmusic.phone/de.notchedmusic.watch.MainActivity
 ```
+
+## Latest changes
+
+- **v1.0.1:** playback service is re-started from the activity and before playback, fixing the
+  screen-lock case where playback previously ran without a foreground service. The full project
+  documentation is now English.
 
 ## Release checklist
 

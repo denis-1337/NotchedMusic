@@ -62,11 +62,10 @@ without the smartphone nearby.
 Ready-to-install signed APKs are attached to the repository releases, so no development setup is
 required:
 
-- [**NotchedMusic v1.0 release**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0)
-  — phone APK, watch APK and SHA-256 checksums.
+- [**NotchedMusic v1.0.1 release**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.1)
+  — phone 1.0.1 APK, watch APK and SHA-256 checksums.
 
-Download the APK for the phone and the APK for the watch and install them with Android's package
-installer. The watch app is a standalone player with its own real-time notch filtering; it does not
+Download the phone APK and the watch APK and install them with Android's package installer. The watch app is a standalone player with its own real-time notch filtering; it does not
 need the phone nearby for playback. A release also includes the current compiled APK binaries for
 users who do not work with Android Studio or Gradle.
 
@@ -114,7 +113,9 @@ from Git.
 - **Real hardware:** tested on a Pixel 10 (API 37) and a TicWatch Pro 5 (API 33), including real
   Wear Data Layer preset/music sync and EQ statistics transfer.
 - **Background playback:** call/hang-up path verified on the emulator; screen-lock path verified on
-  the real Pixel 10 with a signed release APK.
+  the real Pixel 10 with signed release APKs. Version 1.0.1 additionally restores a missing playback
+  service before playback, so screen-lock protection also applies after a locked install or a
+  service restart.
 
 ## Screenshots
 
