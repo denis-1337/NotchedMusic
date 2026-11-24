@@ -1,13 +1,15 @@
 # Screenshots
 
-Owner-supplied screenshots for the repository overview and help pages will be added here.
+The repository overview uses the current phone and watch screenshots from the project folders:
 
-Current project documentation screenshots are stored in
-[`NotchedMusic-Phone/docs/screenshots`](../../NotchedMusic-Phone/docs/screenshots/).
+- [`NotchedMusic-Phone/docs/screenshots`](../../NotchedMusic-Phone/docs/screenshots/) — phone UI;
+- [`NotchedMusic-Watch/docs/screenshots`](../../NotchedMusic-Watch/docs/screenshots/) — watch UI.
+
+The images are linked in [`README.md`](../../README.md#screenshots).
 
 When adding screenshots:
 
 - use PNG or JPEG;
-- keep phone and watch screenshots in separate files;
+- keep phone and watch screenshots in separate project folders;
 - prefer the English UI;
-- avoid including personal library data, account details or notification content.
+- avoid personal library data, account details or notification content.

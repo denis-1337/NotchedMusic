@@ -226,7 +226,7 @@ A2DP chain.
 | scan | 6 titles, 3 knots; nested folder no own node | 21:02 |
 | Playback | AudioTrack/ExoPlayer starts, title changes, repeat takes effect | multiple |
 | Background | 13 minutes with `isForeground=true`, `foregroundId=1001`, Session PLAYING | 21:17:43-21:30:43 |
-| Media release | Title, Artist, Cover, Play/Pause, Forward/Back, Seek | [notification-cover.png](docs/screenshots/notification-cover.png) |
+| Media release | Title, Artist, Cover, Play/Pause, Forward/Back, Seek | verified on the emulator |
 | Media buttons | Pause/Play/Next change session status | 7:30 p.m. |
 | App restart | Get Root, Presets, Volumes, Sync Timestamps | 21:26 |
 | Player Resume | After force-stop/restart, “Album B · 01 - Tone 330” or “Album A/CD 2 · 03 - Tone 880” was selected again | Nov 19, 2026, Emulator |
@@ -234,16 +234,16 @@ A2DP chain.
 | Statistics Persistence | Playback with active filter starts recording; after pause + `force-stop`/restart still “6 min” in the statistics tab | Nov 20, 2026, Emulator |
 | Watch record | Watch Journal (`watch_stats_journal.jsonl`) contains a closed 5 segment after app launch/playback; Real handover to the phone was recorded with 51,645 s and APPLIED-ACK | November 20, 2026, Watch Emulator and Real Devices |
 | Call/screen lock (bug fix) | Playback pauses for an incoming call and resumes after hang-up; the foreground service remains active when the screen locks. Call/hang-up tested on the emulator; real screen-lock case verified on Pixel 10 (`AudioTrack` continued `started` after 32 s, `isForeground=true`, no new AudioHardening messages). | November 24, 2026, emulator and release APK on Pixel 10 |
-| EQ defaults | Preset 1: Notch 8000 Hz, Q 8.00, −20.0 dB | [eq-preset1.png](docs/screenshots/eq-preset1.png) |
+| EQ defaults | Preset 1: Notch 8000 Hz, Q 8.00, −20.0 dB | verified on the emulator |
 | Clip display | Bell 220 Hz +12 dB and preamp +12 dB → red “clip” indicator | 19:39 |
 | sine tone | 440→441 Hz via “+”, Start/Stop | earlier |
 | Sync real | Music mirrored status, timestamp, watch files checked | 22:32-22:46 |
-| Cover online | tagged MP3 (Pink Floyd/Time) → cover loaded and cached | [player-time.png](docs/screenshots/player-time.png) |
-| Cover offline | Airplane mode + cleared cache → wildcard, no file in cache, playing | 9:20 p.m. || Cover embedded | APIC cover in `Embedded.mp3`; displayed in airplane mode without online access | [embedded-cover-offline.png](docs/screenshots/embedded-cover-offline.png) |
+| Cover online | tagged MP3 (Pink Floyd/Time) → cover loaded and cached | verified on the emulator |
+| Cover offline | Airplane mode + cleared cache → wildcard, no file in cache, playing | 9:20 p.m. || Cover embedded | APIC cover in `Embedded.mp3`; displayed in airplane mode without online access | verified on the emulator |
 | Volume Slider | Player and test tone slider correct after fix (50% = −30 dB; 66%) | 22:40 |
 | Revocation of rights | Code path exists, not simulated end-to-end | open |
 
-More screenshots: [docs/screenshots](docs/screenshots).
+Current UI screenshots: [Player](docs/screenshots/Screenshot_phone_player.png), [EQ](docs/screenshots/Screenshot_phone_eq.png), [Setup](docs/screenshots/Screenshot_phone_setup.png), [Statistics](docs/screenshots/Screenshot_phone_stats.png).
 
 ---
 

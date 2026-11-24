@@ -30,6 +30,34 @@ control: it plays the mirrored library entirely on the watch, applies its own re
 filtering locally, and hands EQ listening statistics back during the next sync. It therefore works
 without the smartphone nearby.
 
+## Screenshots
+
+### Phone app
+
+<table>
+  <tr>
+    <td align="center"><a href="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_player.png"><img src="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_player.png" width="210" alt="Phone player with album cover, title and volume"></a><br><b>Player</b><br><sub>Album cover, title, transport and volume</sub></td>
+    <td align="center"><a href="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_eq.png"><img src="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_eq.png" width="210" alt="Phone EQ page with presets and filter bands"></a><br><b>EQ</b><br><sub>Three presets and six real-time filter bands</sub></td>
+    <td align="center"><a href="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_setup.png"><img src="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_setup.png" width="210" alt="Phone setup page with library, sine tone and playback options"></a><br><b>Setup</b><br><sub>Library, sine-tone test and playback options</sub></td>
+    <td align="center"><a href="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_stats.png"><img src="NotchedMusic-Phone/docs/screenshots/Screenshot_phone_stats.png" width="210" alt="Phone statistics page with listening time and charts"></a><br><b>Statistics</b><br><sub>EQ listening time and week/month/year charts</sub></td>
+  </tr>
+</table>
+
+### Watch app
+
+<table>
+  <tr>
+    <td align="center"><a href="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_albums.png"><img src="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_albums.png" width="210" alt="Watch album list with locally mirrored music"></a><br><b>Albums</b><br><sub>Locally mirrored library and album navigation</sub></td>
+    <td align="center"><a href="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_now_playing.png"><img src="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_now_playing.png" width="210" alt="Watch now playing screen with preset and volume"></a><br><b>Now playing</b><br><sub>Standalone playback with preset and volume</sub></td>
+    <td align="center"><a href="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_eq.png"><img src="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_eq.png" width="210" alt="Watch EQ selection page with Off and presets"></a><br><b>EQ selection</b><br><sub>Off and the three phone-edited presets</sub></td>
+    <td align="center"><a href="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_settings.png"><img src="NotchedMusic-Watch/docs/screenshots/Screenshot_watch_settings.png" width="210" alt="Watch settings page with volume and display options"></a><br><b>Settings</b><br><sub>Volume, display, phone status and storage</sub></td>
+  </tr>
+</table>
+
+The watch screenshots were captured on the Wear OS Large Round emulator (API 33). The watch is a
+standalone player: it applies the same real-time notch filtering locally, without streaming audio
+from the phone.
+
 ## Core features
 
 - **Notched music listening** — three editable EQ presets with six bands, notch filters, preamp,
@@ -119,16 +147,10 @@ from Git.
   chart labels and date formats were translated. The phone UI was checked on the real Pixel 10 and
   on the API 37 emulator; the watch UI was checked on the Wear OS Large Round emulator.
 
-## Screenshots
-
-Screenshots are supplied by the project owner. The repository includes current documentation
-screenshots under `NotchedMusic-Phone/docs/screenshots/`; additional overview and help screenshots
-will be added to `docs/screenshots/` later.
-
 ## Roadmap
 
 - Add a German language switch in the Setup menu, with **English as the default**.
-- Add owner-supplied screenshots and finalize the English help pages.
+- Finalize the English help pages.
 - Add instrumented Compose UI tests for sync, player and EQ fields.
 - Complete the large-file-at-limit, abort/storage-shortage, 30-minute A2DP/OLED and icon checks.
 

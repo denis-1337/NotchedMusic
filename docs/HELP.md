@@ -255,5 +255,6 @@ data leave the device.
 
 ## 10. Screenshots
 
-Screenshots are supplied by the project owner. Current documentation screenshots live in
-`NotchedMusic-Phone/docs/screenshots/`; additional images will be added to `docs/screenshots/`.
+The repository overview shows current phone and watch screenshots in
+[`README.md`](../README.md#screenshots). Phone images live in
+`NotchedMusic-Phone/docs/screenshots/`, watch images in `NotchedMusic-Watch/docs/screenshots/`.
