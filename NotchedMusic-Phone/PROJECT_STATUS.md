@@ -316,7 +316,7 @@ and was reflected on the watch. Once completed, the test files were removed from
   release APK on the real Pixel 10: after screen lock, the AudioTrack continued after 32 s, the
   service stayed active with `isForeground=true` and a media notification; no new AudioHardening
   messages appeared.
-- **November 24th, UI translation** The complete phone UI was translated to English: tabs, player/EQ/setup/sync/statistics labels, validation and sync messages, chart labels, month/day names and date formats. The tests were updated for the English chart labels; release 1.0.2 contains the translated APK.
+- **November 24th, UI translation** The complete phone UI was translated to English: tabs, player/EQ/setup/sync/statistics labels, validation and sync messages, chart labels, month/day names and date formats. The tests were updated for the English chart labels; release 1.0.2 contains the translated APK. Player/EQ/Setup/Stats/Sync screens were checked on the API 37 emulator, and the Player tab was checked on the real Pixel 10 after installing 1.0.2.
 - **November 24th, second fix** Root cause of the remaining screen-lock stop: the playback service
   could be absent while the activity continued to own the player, for example after an install or
   launch while the phone was locked. Playback then ran without a foreground service and Android

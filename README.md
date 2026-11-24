@@ -116,7 +116,8 @@ from Git.
   service before playback, so screen-lock protection also applies after a locked install or a
   service restart.
 - **User interface:** the complete phone UI is English; all labels, status messages, chart labels
-  and date formats were translated for version 1.0.2.
+  and date formats were translated for version 1.0.2. The translated Player tab was checked on the
+  real Pixel 10, and all main tabs on the API 37 emulator.
 
 ## Screenshots
 
