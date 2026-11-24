@@ -75,10 +75,10 @@ fun SetupScreen(
     Spacer(Modifier.height(12.dp))
     PillButton("Send to Watch", onSendToWatch, modifier = Modifier.fillMaxWidth())
     Spacer(Modifier.height(8.dp))
-    Text("Öffnet die Synchronize-Seite.", color = MutedGrey, fontSize = 11.sp)
+    Text("Opens the Synchronize page.", color = MutedGrey, fontSize = 11.sp)
 
     Spacer(Modifier.height(20.dp))
-    SectionLabel("MUSIKORDNER")
+    SectionLabel("MUSIC FOLDER")
     Spacer(Modifier.height(6.dp))
     PillButton(
       text = "Select Root Folder",
@@ -89,7 +89,7 @@ fun SetupScreen(
     Spacer(Modifier.height(8.dp))
     SectionLabel("ROOT FOLDER PATH")
     Text(
-      text = settings.rootUri ?: "Noch kein Musikordner gewählt.",
+      text = settings.rootUri ?: "No music folder selected.",
       color = if (library.error != null) DangerRed else Color.White,
       fontSize = 12.sp,
       maxLines = 3,
@@ -99,19 +99,19 @@ fun SetupScreen(
     if (libraryError != null) {
       Text(libraryError, color = DangerRed, fontSize = 11.sp)
       Spacer(Modifier.height(6.dp))
-      PillButton("Erneut versuchen", { viewModel.scan() }, color = SurfaceRaised)
+      PillButton("Try again", { viewModel.scan() }, color = SurfaceRaised)
     }
     if (library.snapshot.allTracks.isNotEmpty()) {
       Text(
-        "${library.snapshot.rootName}: ${library.snapshot.allTracks.size} Titel, " +
-          "${library.snapshot.folders.size} Knoten",
+        "${library.snapshot.rootName}: ${library.snapshot.allTracks.size} tracks, " +
+          "${library.snapshot.folders.size} nodes",
         color = MutedGrey,
         fontSize = 11.sp,
       )
     }
 
     Spacer(Modifier.height(20.dp))
-    SectionLabel("SINUSTON")
+    SectionLabel("SINE TONE")
     Spacer(Modifier.height(6.dp))
     PillButton(
       text = if (sinePlaying) "Stop Sine Wave" else "Play Sine Wave",
@@ -125,7 +125,7 @@ fun SetupScreen(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      SectionLabel("FREQUENZ")
+      SectionLabel("FREQUENCY")
       Text("${settings.sineFrequencyHz} Hz", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -139,7 +139,7 @@ fun SetupScreen(
       )
       StepButton("+") { viewModel.nudgeSineFrequency(1) }
     }
-    Text("10-Hz-Schritte am Regler · ±1 Hz an den Tasten · langes Drücken = ±10 Hz", color = MutedGrey, fontSize = 10.sp)
+    Text("10 Hz steps on the slider · ±1 Hz with the buttons · long press = ±10 Hz", color = MutedGrey, fontSize = 10.sp)
 
     Spacer(Modifier.height(10.dp))
     Row(
@@ -147,7 +147,7 @@ fun SetupScreen(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      SectionLabel("TESTLAUTSTÄRKE")
+      SectionLabel("TEST VOLUME")
       Text("${sineVolumePercent.toInt()} %", color = Color.White, fontSize = 13.sp)
     }
     Slider(
@@ -156,10 +156,10 @@ fun SetupScreen(
       onValueChange = viewModel::setSineVolumePercent,
       modifier = Modifier.fillMaxWidth(),
     )
-    Text("Vorsicht: Beginne leise und erhöhe langsam.", color = MutedGrey, fontSize = 10.sp)
+    Text("Caution: start quietly and increase slowly.", color = MutedGrey, fontSize = 10.sp)
 
     Spacer(Modifier.height(20.dp))
-    SectionLabel("WIEDERGABE")
+    SectionLabel("PLAYBACK")
     Spacer(Modifier.height(6.dp))
     Row(
       modifier = Modifier.fillMaxWidth(),
@@ -168,7 +168,7 @@ fun SetupScreen(
     ) {
       Column {
         Text("Auto-Advance", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-        Text("nächster Titel am Ordnerende", color = MutedGrey, fontSize = 10.sp)
+        Text("next track at folder end", color = MutedGrey, fontSize = 10.sp)
       }
       Switch(
         checked = settings.autoAdvance,
@@ -192,9 +192,9 @@ fun SetupScreen(
         ) {
           Text(
             text = when (mode) {
-              RepeatMode.OFF -> "AUS"
-              RepeatMode.ONE -> "TITEL"
-              RepeatMode.ALL -> "ALLE"
+              RepeatMode.OFF -> "OFF"
+              RepeatMode.ONE -> "TRACK"
+              RepeatMode.ALL -> "ALL"
             },
             color = Color.White,
             fontSize = 11.sp,
@@ -205,42 +205,42 @@ fun SetupScreen(
     }
     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
       Text(
-        if (settings.repeatMode == RepeatMode.ONE) "Titel wiederholt sich." else if (settings.autoAdvance) "Ordner läuft weiter." else "Stoppt am Ordnerende.",
+        if (settings.repeatMode == RepeatMode.ONE) "Track repeats." else if (settings.autoAdvance) "Folder continues." else "Stops at folder end.",
         color = MutedGrey,
         fontSize = 10.sp,
       )
     }
 
     Spacer(Modifier.height(20.dp))
-    SectionLabel("BIBLIOTHEK")
+    SectionLabel("LIBRARY")
     Spacer(Modifier.height(6.dp))
     PillButton(
-      "Musik neu einlesen",
+      "Rescan music",
       onClick = { library.snapshot.let { viewModel.scan() } },
       color = SurfaceRaised,
       modifier = Modifier.fillMaxWidth(),
     )
     if (library.scanning) {
-      Text("Scan läuft…", color = MutedGrey, fontSize = 11.sp)
+      Text("Scanning…", color = MutedGrey, fontSize = 11.sp)
     }
 
     Spacer(Modifier.height(20.dp))
-    SectionLabel("DIAGNOSE")
+    SectionLabel("DIAGNOSTICS")
     Spacer(Modifier.height(6.dp))
     InfoRow("Version", BuildConfig.VERSION_NAME)
-    InfoRow("Titel", "${library.snapshot.allTracks.size}")
+    InfoRow("Tracks", "${library.snapshot.allTracks.size}")
     InfoRow("Root", library.snapshot.rootName.ifBlank { "–" })
     InfoRow(
-      "Letzter Scan",
+      "Last scan",
       if (library.snapshot.scannedAtMs > 0) formatTime(library.snapshot.scannedAtMs) else "–",
     )
-    InfoRow("Wiedergabe", if (playback.isPlaying) "läuft" else "steht")
-    InfoRow("App-Lautstärke", "${settings.playerVolumeDb.toInt()} dB")
+    InfoRow("Playback", if (playback.isPlaying) "playing" else "stopped")
+    InfoRow("App volume", "${settings.playerVolumeDb.toInt()} dB")
     InfoRow("EQ", if (settings.eqBypass) "Bypass" else settings.activePreset().name)
-    InfoRow("Sync", if (sync.lastSyncMs > 0) formatTime(sync.lastSyncMs) else "noch nicht")
-    InfoRow("Sync-Transport", "Wear Data Layer")
+    InfoRow("Sync", if (sync.lastSyncMs > 0) formatTime(sync.lastSyncMs) else "not yet")
+    InfoRow("Sync transport", "Wear Data Layer")
     Text(
-      "Audio-Route: System (A2DP) · DSP: Media3-AudioProcessor",
+      "Audio route: System (A2DP) · DSP: Media3 AudioProcessor",
       color = MutedGrey,
       fontSize = 10.sp,
       modifier = Modifier.padding(top = 6.dp),
@@ -266,4 +266,4 @@ private fun StepButton(label: String, onClick: () -> Unit) {
 }
 
 private fun formatTime(epochMs: Long): String =
-  SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY).format(Date(epochMs))
+  SimpleDateFormat("dd MMM yyyy HH:mm", Locale.ENGLISH).format(Date(epochMs))

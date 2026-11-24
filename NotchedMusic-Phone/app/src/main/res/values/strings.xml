@@ -11,14 +11,14 @@
     <!-- Player -->
     <string name="clip_limiter">Limiter</string>
     <string name="clip_clip">Clip</string>
-    <string name="content_desc_cover">Album-Cover</string>
+    <string name="content_desc_cover">Album cover</string>
 
     <!-- Sync -->
     <string name="sync_title">Synchronize EQ Presets and Music to Watch</string>
     <string name="sync_eqs">SYNC EQs</string>
     <string name="sync_music">SYNC MUSIC</string>
-    <string name="select_all">Alle auswählen</string>
-    <string name="deselect_all">Alle abwählen</string>
-    <string name="last_sync">Zuletzt synchronisiert</string>
-    <string name="cancel">Abbrechen</string>
+    <string name="select_all">Select all</string>
+    <string name="deselect_all">Deselect all</string>
+    <string name="last_sync">Last synced</string>
+    <string name="cancel">Cancel</string>
 </resources>

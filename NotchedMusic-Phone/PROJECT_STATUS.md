@@ -1,6 +1,6 @@
 # Project Status – NotchedMusic Phone
 
-**As of:** November 24th, 2026 (bug fixes: background playback and playback-service startup)
+**As of:** November 24th, 2026 (English phone UI, 1.0.2 release)
 **Overall Status:** Working; real Wear Data Layer sync accepted on Pixel 10 ↔ TicWatch Pro 5. The Watch app has been brought up to the same level (three presets, seven filter types,
 Music Mirror).
 
@@ -91,7 +91,7 @@ gradlew.bat :app:lintDebug
 | Resumption | finished | Folder + last played track survive app restart; Emulator recording with album B and “03 - Ton 880” in the subfolder “CD 2” |
 | EQ statistics | finished | fourth tab `STATS`; Total/average day/today, week-month-year chart with arrows and visible scale (max, half, 0), short times less than a minute in seconds; `days.json` + Journal, compression when opening and when syncing; Sync path `/stats/request` → `/stats/report` → `/stats/ack`, watch is only deleted after APPLIED-ACK. Emulator acceptance of the phone page and watch record; real handover verified on Pixel 10 ↔ TicWatch Pro 5 |
 | Error images | finished | Scan/SAF error with understandable text and “Try again”; Sync errors per ACK reason |
-| Dark Theme / Usability | finished | German texts, big targets, content descriptions, no pure color coding |
+| Dark Theme / Usability | finished | English UI texts, big targets, content descriptions, no pure color coding |
 
 ### Deliberately so decided
 
@@ -316,6 +316,7 @@ and was reflected on the watch. Once completed, the test files were removed from
   release APK on the real Pixel 10: after screen lock, the AudioTrack continued after 32 s, the
   service stayed active with `isForeground=true` and a media notification; no new AudioHardening
   messages appeared.
+- **November 24th, UI translation** The complete phone UI was translated to English: tabs, player/EQ/setup/sync/statistics labels, validation and sync messages, chart labels, month/day names and date formats. The tests were updated for the English chart labels; release 1.0.2 contains the translated APK.
 - **November 24th, second fix** Root cause of the remaining screen-lock stop: the playback service
   could be absent while the activity continued to own the player, for example after an install or
   launch while the phone was locked. Playback then ran without a foreground service and Android

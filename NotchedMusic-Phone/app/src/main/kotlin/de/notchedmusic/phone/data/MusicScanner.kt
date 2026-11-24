@@ -94,12 +94,12 @@ class MusicScanner(private val context: Context) {
         Log.i(TAG, "Scan fertig: ${snapshot.allTracks.size} Titel in ${System.currentTimeMillis() - started} ms, ${snapshot.folders.size} Knoten.")
         ScanResult.Success(snapshot)
       } catch (error: FileNotFoundException) {
-        ScanResult.Failure("Der Ordner ist nicht mehr lesbar. Bitte den Musikordner erneut wählen.")
+        ScanResult.Failure("The folder is no longer readable. Choose the music folder again.")
       } catch (error: SecurityException) {
-        ScanResult.Failure("Der Zugriff auf den Musikordner fehlt. Bitte den Ordner erneut freigeben.")
+        ScanResult.Failure("Access to the music folder is missing. Grant access to the folder again.")
       } catch (error: Exception) {
         Log.w(TAG, "Scan fehlgeschlagen", error)
-        ScanResult.Failure("Die Bibliothek konnte nicht gelesen werden.")
+        ScanResult.Failure("The library could not be read.")
       }
     }
 
@@ -205,7 +205,7 @@ class MusicScanner(private val context: Context) {
 
   private companion object {
     const val TAG = "MusicScanner"
-    const val FALLBACK_ROOT_NAME = "Musik"
+    const val FALLBACK_ROOT_NAME = "Music"
     const val ROOT_KEY = "root"
     const val MAX_DEPTH = 8
     const val MAX_FILES = 5_000

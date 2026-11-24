@@ -109,7 +109,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
       val uri = rootUri.toUri()
       if (!graph.saf.hasPersistedReadPermission(uri)) {
         _library.value = LibraryUiState(
-          error = "Zugriff auf den Musikordner fehlt. Bitte im Setup erneut wählen.",
+          error = "Access to the music folder is missing. Choose it again in Setup.",
         )
       } else {
         scan()
@@ -119,7 +119,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
   fun scan() {
     val rootUri = settings.value.rootUri ?: run {
-      _library.value = LibraryUiState(error = "Noch kein Musikordner gewählt.")
+      _library.value = LibraryUiState(error = "No music folder selected.")
       return
     }
     scanJob?.cancel()
@@ -148,7 +148,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     if (uri == null) return
     val previous = settings.value.rootUri?.let(Uri::parse)
     if (!graph.saf.takePersistableReadPermission(uri, previous)) {
-      _library.value = _library.value.copy(error = "Die Ordnerfreigabe wurde nicht erteilt.")
+      _library.value = _library.value.copy(error = "Folder access was not granted.")
       return
     }
     observedRootUri = uri.toString()
@@ -455,7 +455,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
   fun filterTypeLabel(type: FilterType): String =
     when (type) {
-      FilterType.OFF -> "Aus"
+      FilterType.OFF -> "Off"
       FilterType.NOTCH -> "Notch"
       FilterType.PEAKING -> "Bell"
       FilterType.LOW_SHELF -> "Low-Shelf"

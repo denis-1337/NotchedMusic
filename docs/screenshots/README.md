@@ -9,5 +9,5 @@ When adding screenshots:
 
 - use PNG or JPEG;
 - keep phone and watch screenshots in separate files;
-- prefer the English UI once the language switch is available;
+- prefer the English UI;
 - avoid including personal library data, account details or notification content.

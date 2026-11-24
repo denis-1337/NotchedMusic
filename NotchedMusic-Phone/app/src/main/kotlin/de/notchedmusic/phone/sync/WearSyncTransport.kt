@@ -107,18 +107,18 @@ class WearSyncTransport(
         itemUri?.let { gateway.deleteDataItem(it) }
       }
     }
-    return SyncResult.Failure("Die Uhr hat nicht geantwortet (Timeout).")
+    return SyncResult.Failure("The watch did not respond (timeout).")
   }
 
   override suspend fun sendMusic(
     items: List<MusicUpload>,
     onProgress: (SyncProgress) -> Unit,
   ): SyncResult {
-    if (items.isEmpty()) return SyncResult.Failure("Keine Titel ausgewählt.")
+    if (items.isEmpty()) return SyncResult.Failure("No tracks selected.")
 
     val node =
       gateway.findNode(WATCH_CAPABILITY)
-        ?: return SyncResult.Failure("Uhr nicht erreichbar. Bitte Kopplung und Bluetooth prüfen.")
+        ?: return SyncResult.Failure("Watch not reachable. Check pairing and Bluetooth.")
     watchNodeId = node
 
     val prepared = mutableListOf<PreparedMusic>()
@@ -127,7 +127,7 @@ class WearSyncTransport(
       val key = "${item.album.orEmpty()}\u0000${item.fileName}"
       if (!seen.add(key)) continue
       if (item.sizeBytes > SyncProtocol.MAX_MUSIC_FILE_BYTES) {
-        return SyncResult.Failure("${item.fileName}: Datei ist größer als 40 MB.")
+        return SyncResult.Failure("${item.fileName}: file is larger than 40 MB.")
       }
       val meta =
         try {
@@ -137,7 +137,7 @@ class WearSyncTransport(
         }
       prepared += PreparedMusic(item, meta)
     }
-    if (prepared.isEmpty()) return SyncResult.Failure("Keine übertragbaren Titel.")
+    if (prepared.isEmpty()) return SyncResult.Failure("No transferable tracks.")
 
     val sessionId = UUID.randomUUID().toString()
     currentSessionId = sessionId
@@ -155,7 +155,7 @@ class WearSyncTransport(
       )
     val manifestJson = SyncProtocol.encodeManifest(manifest)
     if (manifestJson.toByteArray(Charsets.UTF_8).size > SyncProtocol.MAX_MANIFEST_BYTES) {
-      return SyncResult.Failure("Auswahl zu groß: Manifest überschreitet 1 MiB.")
+      return SyncResult.Failure("Selection too large: manifest exceeds 1 MiB.")
     }
 
     val bytesTotal = prepared.sumOf { it.meta.sizeBytes }
@@ -202,7 +202,7 @@ class WearSyncTransport(
         manifestItemUri?.let { gateway.deleteDataItem(it) }
       }
     }
-    if (!manifestAccepted) return SyncResult.Failure("Die Uhr hat das Manifest nicht bestätigt (Rückfall-Frist).")
+    if (!manifestAccepted) return SyncResult.Failure("The watch did not confirm the manifest (fallback deadline).")
 
     // Ab jetzt sendet die Sitzung lange: das Lebenszeichen hält den Lauscher der Uhr offen, damit
     // ein großer Titel mitten im Transfer nicht zugehält. Bei Erfolg, Fehler oder Abbruch ist es weg.
@@ -216,7 +216,7 @@ class WearSyncTransport(
         }
         val music = prepared[index]
         var uploaded = false
-        var lastError = "Übertragung abgebrochen."
+        var lastError = "Transfer cancelled."
         repeat(FILE_ATTEMPTS) { attempt ->
           if (uploaded) return@repeat
           val key = AckKey(sessionId, SyncKinds.MUSIC_FILE, index)
@@ -266,7 +266,7 @@ class WearSyncTransport(
       val commitAccepted = sendCommit(sessionId)
       return when (commitAccepted) {
         true -> SyncResult.Success
-        false -> SyncResult.Failure("Die Uhr hat den Musik-Commit nicht bestätigt. Es wurde nichts gelöscht.")
+        false -> SyncResult.Failure("The watch did not confirm the music commit. Nothing was deleted.")
       }
     } finally {
       halteJob.cancel()
@@ -299,20 +299,20 @@ class WearSyncTransport(
   ): StatsRequestResult {
     val node =
       gateway.findNode(WATCH_CAPABILITY)
-        ?: return StatsRequestResult.Failure("Uhr nicht erreichbar. Bitte Kopplung und Bluetooth prüfen.")
+        ?: return StatsRequestResult.Failure("Watch not reachable. Check pairing and Bluetooth.")
     val requestId = UUID.randomUUID().toString()
     val waiter = statsReports.register(requestId)
     try {
-      onProgress(SyncProgress(label = "Statistik", done = 0, total = 1))
+      onProgress(SyncProgress(label = "Statistics", done = 0, total = 1))
       val sent =
         withContext(Dispatchers.IO) {
           gateway.sendMessage(node, StatsProtocol.PATH_REQUEST, requestId.toByteArray(Charsets.UTF_8))
         }
-      if (!sent) return StatsRequestResult.Failure("Die Uhr hat die Statistik-Anfrage nicht angenommen.")
+      if (!sent) return StatsRequestResult.Failure("The watch did not accept the statistics request.")
       val incoming =
         withTimeoutOrNull(STATS_REPORT_TIMEOUT_MS) { waiter.await() }
-          ?: return StatsRequestResult.Failure("Die Uhr hat keine Statistik geschickt (Timeout).")
-      onProgress(SyncProgress(label = "Statistik", done = 1, total = 1))
+          ?: return StatsRequestResult.Failure("The watch did not send statistics (timeout).")
+      onProgress(SyncProgress(label = "Statistics", done = 1, total = 1))
       return StatsRequestResult.Success(incoming)
     } finally {
       statsReports.unregister(requestId)
@@ -397,16 +397,16 @@ class WearSyncTransport(
 
   private fun errorText(error: String?): String =
     when (error) {
-      SyncProtocol.ERROR_INVALID_PAYLOAD -> "Die Uhr hat das Paket abgelehnt (ungültige Daten)."
-      SyncProtocol.ERROR_TOO_LARGE -> "Datei oder Paket ist zu groß für die Uhr."
-      SyncProtocol.ERROR_UNSUPPORTED_VERSION -> "Die Watch-App ist zu alt für dieses Protokoll."
-      SyncProtocol.ERROR_INSUFFICIENT_SPACE -> "Auf der Uhr ist zu wenig Speicher frei."
-      SyncProtocol.ERROR_SESSION_MISMATCH -> "Der Sync-Lauf passt nicht zur Uhr. Bitte neu starten."
-      SyncProtocol.ERROR_CHECKSUM_MISMATCH -> "Die Übertragung war beschädigt (SHA-256 passt nicht)."
-      SyncProtocol.ERROR_MISSING_FILE -> "Auf der Uhr fehlen Dateien; es wurde nichts gelöscht."
-      SyncProtocol.ERROR_INTERNAL -> "Interner Fehler auf der Uhr."
-      null -> "Die Uhr hat den Sync abgelehnt."
-      else -> "Die Uhr meldet: $error"
+      SyncProtocol.ERROR_INVALID_PAYLOAD -> "The watch rejected the package (invalid data)."
+      SyncProtocol.ERROR_TOO_LARGE -> "File or package is too large for the watch."
+      SyncProtocol.ERROR_UNSUPPORTED_VERSION -> "The watch app is too old for this protocol."
+      SyncProtocol.ERROR_INSUFFICIENT_SPACE -> "The watch has insufficient free storage."
+      SyncProtocol.ERROR_SESSION_MISMATCH -> "The sync run does not match the watch. Please restart."
+      SyncProtocol.ERROR_CHECKSUM_MISMATCH -> "The transfer was corrupted (SHA-256 mismatch)."
+      SyncProtocol.ERROR_MISSING_FILE -> "Files are missing on the watch; nothing was deleted."
+      SyncProtocol.ERROR_INTERNAL -> "Internal error on the watch."
+      null -> "The watch rejected the sync."
+      else -> "The watch reports: $error"
     }
 
   private data class PreparedMusic(val upload: MusicUpload, val meta: PreparedAsset)

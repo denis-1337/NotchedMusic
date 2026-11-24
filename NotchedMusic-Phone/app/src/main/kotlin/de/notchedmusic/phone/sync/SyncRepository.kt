@@ -90,7 +90,7 @@ class SyncRepository(
       _state.update {
         it.copy(
           watchAvailable = available,
-          message = if (available) "Uhr gefunden." else "Keine erreichbare Uhr gefunden.",
+          message = if (available) "Watch found." else "No reachable watch found.",
           messageIsError = !available,
         )
       }
@@ -106,7 +106,7 @@ class SyncRepository(
         _state.update {
           it.copy(
             isRunning = true,
-            operationLabel = "Statistik",
+            operationLabel = "Statistics",
             progress = null,
             message = null,
             messageIsError = false,
@@ -117,7 +117,7 @@ class SyncRepository(
             _state.update {
               it.copy(
                 isRunning = false,
-                message = "Uhr nicht erreichbar. Kopplung und Bluetooth prüfen.",
+                message = "Watch not reachable. Check pairing and Bluetooth.",
                 messageIsError = true,
                 watchAvailable = false,
               )
@@ -143,7 +143,7 @@ class SyncRepository(
                   itemUri = incoming.itemUri,
                 )
                 finish(
-                  SyncResult.Failure(merge.error ?: "Uhr-Statistik konnte nicht gespeichert werden."),
+                  SyncResult.Failure(merge.error ?: "Watch statistics could not be saved."),
                   "",
                 )
               } else {
@@ -156,13 +156,13 @@ class SyncRepository(
                   )
                 val text =
                   if (merge.alreadyProcessed) {
-                    "Uhr-Statistik war bereits übernommen."
+                    "Watch statistics were already imported."
                   } else {
-                    "Uhr-Statistik übernommen: ${merge.mergedDays} Tage."
+                    "Watch statistics imported: ${merge.mergedDays} days."
                   }
                 finish(
                   SyncResult.Success,
-                  if (acknowledged) text else "$text Die Uhr hat die Bestätigung noch nicht erhalten.",
+                  if (acknowledged) text else "$text The watch has not received the confirmation yet.",
                 )
               }
             }
@@ -172,7 +172,7 @@ class SyncRepository(
         } catch (error: Exception) {
           _state.update {
             it.copy(
-              message = "Statistik-Sync fehlgeschlagen: ${error.message}",
+              message = "Statistics sync failed: ${error.message}",
               messageIsError = true,
             )
           }
@@ -209,7 +209,7 @@ class SyncRepository(
             _state.update {
               it.copy(
                 isRunning = false,
-                message = "Uhr nicht erreichbar. Kopplung und Bluetooth prüfen.",
+                message = "Watch not reachable. Check pairing and Bluetooth.",
                 messageIsError = true,
                 watchAvailable = false,
               )
@@ -220,7 +220,7 @@ class SyncRepository(
             transport.sendPresets(payload) { progress ->
               _state.update { it.copy(progress = progress) }
             }
-          finish(result, "3 Presets an die Uhr gesendet.")
+          finish(result, "3 presets sent to the watch.")
         } finally {
           _state.update { it.copy(isRunning = false) }
         }
@@ -241,7 +241,7 @@ class SyncRepository(
         _state.update {
           it.copy(
             isRunning = true,
-            operationLabel = "Musik",
+            operationLabel = "Music",
             progress = null,
             message = null,
             messageIsError = false,
@@ -250,7 +250,7 @@ class SyncRepository(
         try {
           if (unique.isEmpty()) {
             _state.update {
-              it.copy(isRunning = false, message = "Keine Titel ausgewählt.", messageIsError = true)
+              it.copy(isRunning = false, message = "No tracks selected.", messageIsError = true)
             }
             return@launch
           }
@@ -262,9 +262,9 @@ class SyncRepository(
           if (invalid != null) {
             val reason =
               if (invalid.fileSizeBytes > SyncProtocol.MAX_MUSIC_FILE_BYTES) {
-                "größer als 40 MB"
+                "larger than 40 MB"
               } else {
-                "kein unterstütztes Audioformat"
+                "unsupported audio format"
               }
             _state.update {
               it.copy(
@@ -279,7 +279,7 @@ class SyncRepository(
             _state.update {
               it.copy(
                 isRunning = false,
-                message = "Uhr nicht erreichbar. Kopplung und Bluetooth prüfen.",
+                message = "Watch not reachable. Check pairing and Bluetooth.",
                 messageIsError = true,
                 watchAvailable = false,
               )
@@ -300,7 +300,7 @@ class SyncRepository(
             transport.sendMusic(uploads) { progress ->
               _state.update { it.copy(progress = progress) }
             }
-          finish(result, "Musik gespiegelt: ${unique.size} Titel.")
+          finish(result, "Music mirrored: ${unique.size} tracks.")
         } finally {
           _state.update { it.copy(isRunning = false) }
         }
@@ -313,7 +313,7 @@ class SyncRepository(
     _state.update {
       it.copy(
         isRunning = false,
-        message = "Abgebrochen. Die Uhr löscht nichts; bereits übertragene Dateien bleiben liegen.",
+        message = "Cancelled. The watch deletes nothing; files already transferred remain.",
         messageIsError = false,
       )
     }
@@ -325,7 +325,7 @@ class SyncRepository(
     _state.update {
       it.copy(
         isRunning = false,
-        message = "Der Sync wurde von der Uhr abgebrochen.",
+        message = "The sync was cancelled by the watch.",
         messageIsError = true,
       )
     }
@@ -354,7 +354,7 @@ class SyncRepository(
         _state.update {
           it.copy(
             isRunning = false,
-            message = "Abgebrochen. Die Uhr löscht nichts.",
+            message = "Cancelled. The watch deletes nothing.",
             messageIsError = false,
           )
         }

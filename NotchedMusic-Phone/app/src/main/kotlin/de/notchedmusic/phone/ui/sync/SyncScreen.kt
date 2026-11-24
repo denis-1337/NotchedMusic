@@ -100,7 +100,7 @@ fun SyncScreen(
       modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
     )
     Text(
-      text = "Wähle, welche Musik die Uhr bekommen soll. Presets werden immer alle drei gesendet.",
+      text = "Choose which music the watch should receive. All three presets are always sent.",
       color = MutedGrey,
       fontSize = 11.sp,
       textAlign = TextAlign.Center,
@@ -115,16 +115,16 @@ fun SyncScreen(
       Text(
         text =
           when (sync.watchAvailable) {
-            true -> "Uhr verbunden – Bluetooth/WLAN aktiv."
-            false -> "Keine Uhr gefunden – App auf der Uhr öffnen."
-            null -> "Suche Uhr…"
+            true -> "Watch connected – Bluetooth/Wi-Fi active."
+            false -> "No watch found – open the app on the watch."
+            null -> "Looking for watch…"
           },
         color = if (sync.watchAvailable == false) DangerRed else MutedGrey,
         fontSize = 10.sp,
         textAlign = TextAlign.Center,
       )
       Text(
-        text = "Uhr suchen",
+        text = "Find watch",
         color = Blue,
         fontSize = 10.sp,
         modifier =
@@ -141,7 +141,7 @@ fun SyncScreen(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      SectionLabel("AUSWAHL")
+      SectionLabel("SELECTION")
       Row {
         Text(
           stringResource(R.string.select_all),
@@ -162,7 +162,7 @@ fun SyncScreen(
       if (folders.isEmpty()) {
         item {
           Text(
-            "Noch keine Bibliothek. Wähle im Setup einen Musikordner.",
+            "No library yet. Choose a music folder in Setup.",
             color = MutedGrey,
             fontSize = 12.sp,
             modifier = Modifier.padding(vertical = 16.dp),
@@ -188,14 +188,14 @@ fun SyncScreen(
           )
           Column(Modifier.weight(1f)) {
             Text(
-              text = folder.name + if (folder.isRoot) " (alles)" else "",
+              text = folder.name + if (folder.isRoot) " (all)" else "",
               color = Color.White,
               fontSize = 14.sp,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
             )
             Text(
-              "${folder.trackCount} Titel · ${formatBytes(folder.sizeBytes)}",
+              "${folder.trackCount} tracks · ${formatBytes(folder.sizeBytes)}",
               color = MutedGrey,
               fontSize = 10.sp,
             )
@@ -207,8 +207,8 @@ fun SyncScreen(
 
     Text(
       text = when {
-        sync.selection.isEmpty() -> "Keine Ordner ausgewählt."
-        else -> "${sync.selection.size} Ordner · ${selectedTracks.size} Titel · ${formatBytes(selectedBytes)}"
+        sync.selection.isEmpty() -> "No folders selected."
+        else -> "${sync.selection.size} folders · ${selectedTracks.size} tracks · ${formatBytes(selectedBytes)}"
       },
       color = MutedGrey,
       fontSize = 11.sp,
@@ -222,7 +222,7 @@ fun SyncScreen(
           if (progress != null) {
             "${progress.done} / ${progress.total} · ${progress.label} · ${(progress.fraction * 100).toInt()} %"
           } else {
-            "${sync.operationLabel} · warte auf Uhr…"
+            "${sync.operationLabel} · waiting for watch…"
           },
         color = Color.White,
         fontSize = 11.sp,
@@ -271,7 +271,7 @@ fun SyncScreen(
         if (sync.lastSyncMs > 0) {
           "${stringResource(R.string.last_sync)}: ${formatTime(sync.lastSyncMs)}"
         } else {
-          stringResource(R.string.last_sync) + ": noch nie"
+          stringResource(R.string.last_sync) + ": never"
         },
       color = MutedGrey,
       fontSize = 10.sp,
@@ -281,4 +281,4 @@ fun SyncScreen(
 }
 
 private fun formatTime(epochMs: Long): String =
-  SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY).format(Date(epochMs))
+  SimpleDateFormat("dd MMM HH:mm", Locale.ENGLISH).format(Date(epochMs))

@@ -82,9 +82,9 @@ fun formatBytes(bytes: Long): String {
   if (bytes <= 0) return "0 MB"
   val mb = bytes / (1024.0 * 1024.0)
   return if (mb < 1.0) {
-    "%.0f KB".format(Locale.GERMANY, bytes / 1024.0)
+    "%.0f KB".format(Locale.ENGLISH, bytes / 1024.0)
   } else {
-    "%.1f MB".format(Locale.GERMANY, mb)
+    "%.1f MB".format(Locale.ENGLISH, mb)
   }
 }
 

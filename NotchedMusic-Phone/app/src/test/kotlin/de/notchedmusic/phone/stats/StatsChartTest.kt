@@ -15,7 +15,7 @@ class StatsChartTest {
     val chart = statsChartFor(days, StatsPeriod.WEEK, offset = 0, today = today)
 
     assertEquals(7, chart.bars.size)
-    assertEquals(listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"), chart.bars.map { it.label })
+    assertEquals(listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"), chart.bars.map { it.label })
     assertEquals(3_600_000L, chart.bars[0].activeMs)
     assertEquals(7_200_000L, chart.bars[2].activeMs)
     assertEquals(10_800_000L, chart.totalMs)
@@ -35,7 +35,7 @@ class StatsChartTest {
 
     assertTrue(chart.bars.isNotEmpty())
     assertEquals(6_000L, chart.totalMs)
-    assertTrue(chart.bars.all { it.label.startsWith("KW ") })
+    assertTrue(chart.bars.all { it.label.startsWith("Wk ") })
     assertTrue(chart.bars.any { it.activeMs == 5_000L })
   }
 

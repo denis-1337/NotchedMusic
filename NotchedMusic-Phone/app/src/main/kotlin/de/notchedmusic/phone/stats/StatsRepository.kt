@@ -73,7 +73,7 @@ class StatsRepository(context: Context) {
         }
       } catch (error: Exception) {
         _state.update {
-          it.copy(loading = false, error = "Statistik konnte nicht gelesen werden: ${error.message}")
+          it.copy(loading = false, error = "Statistics could not be read: ${error.message}")
         }
       }
     }
@@ -94,7 +94,7 @@ class StatsRepository(context: Context) {
         } catch (error: Exception) {
           return StatsMergeResult(
             applied = false,
-            error = "Uhr-Statistik konnte nicht gespeichert werden: ${error.message}",
+            error = "Watch statistics could not be saved: ${error.message}",
           )
         }
       try {

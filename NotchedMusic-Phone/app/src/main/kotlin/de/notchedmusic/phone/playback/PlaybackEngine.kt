@@ -217,8 +217,8 @@ object PlaybackEngine {
         _state.update {
           it.copy(
             errorMessage =
-              "Dieser Titel kann nicht abgespielt werden (${error.errorCodeName}). " +
-                "Die Wiedergabe bleibt stehen.",
+              "This track cannot be played (${error.errorCodeName}). " +
+                "Playback remains stopped.",
           )
         }
       }

@@ -105,8 +105,8 @@ fun PlayerScreen(
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     NavigationRow(
-      label = "ORDNER",
-      value = folder?.name ?: "Kein Ordner",
+      label = "FOLDER",
+      value = folder?.name ?: "No folder",
       onPrevious = { viewModel.nextFolder(-1) },
       onNext = { viewModel.nextFolder(1) },
       onValueClick = { showFolders = true },
@@ -114,8 +114,8 @@ fun PlayerScreen(
     Spacer(Modifier.height(12.dp))
 
     NavigationRow(
-      label = "TITEL",
-      value = if (playback.hasTracks) (currentTrack?.title ?: playback.title) else "Keine Titel",
+      label = "TITLE",
+      value = if (playback.hasTracks) (currentTrack?.title ?: playback.title) else "No tracks",
       onPrevious = viewModel::previousTrack,
       onNext = viewModel::nextTrack,
       onValueClick = {},
@@ -163,7 +163,7 @@ fun PlayerScreen(
     }
     Spacer(Modifier.height(12.dp))
     Text(
-      text = currentTrack?.title ?: "Noch kein Titel",
+      text = currentTrack?.title ?: "No track yet",
       color = Color.White,
       fontSize = 20.sp,
       fontWeight = FontWeight.SemiBold,
@@ -172,7 +172,7 @@ fun PlayerScreen(
       overflow = TextOverflow.Ellipsis,
     )
     Text(
-      text = currentTrack?.subtitle ?: if (hasFolder) "Ordner wählen und Play drücken" else "Kein Musikordner gewählt",
+      text = currentTrack?.subtitle ?: if (hasFolder) "Choose a folder and press Play" else "No music folder selected",
       color = MutedGrey,
       fontSize = 13.sp,
       textAlign = TextAlign.Center,
@@ -197,7 +197,7 @@ fun PlayerScreen(
       Spacer(Modifier.height(6.dp))
       Text(libraryError, color = DangerRed, fontSize = 12.sp, textAlign = TextAlign.Center)
       Spacer(Modifier.height(6.dp))
-      PillButton("Ordner wählen", onPickFolder)
+      PillButton("Choose folder", onPickFolder)
     }
 
     Spacer(Modifier.height(16.dp))
@@ -206,7 +206,7 @@ fun PlayerScreen(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      SectionLabel("LAUTSTÄRKE")
+      SectionLabel("VOLUME")
       ClipBadge(clipLevel)
     }
     Slider(
@@ -227,7 +227,7 @@ fun PlayerScreen(
         Column {
           Text("EQ BYPASS", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
           Text(
-            text = if (settings.eqBypass) "Filter aus – Originalklang" else "Filter aktiv",
+            text = if (settings.eqBypass) "EQ off – original sound" else "EQ active",
             color = MutedGrey,
             fontSize = 11.sp,
           )
@@ -272,7 +272,7 @@ fun PlayerScreen(
       containerColor = SurfaceDark,
     ) {
       Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
-        SectionLabel("ORDNER WÄHLEN")
+        SectionLabel("CHOOSE FOLDER")
         snapshot.folders.forEach { node ->
           Row(
             modifier =
@@ -287,14 +287,14 @@ fun PlayerScreen(
             verticalAlignment = Alignment.CenterVertically,
           ) {
             Text(
-              text = node.name + if (node.isRoot) " (alles)" else "",
+              text = node.name + if (node.isRoot) " (all)" else "",
               color = if (node.key == selectedFolderKey) Blue else Color.White,
               fontSize = 16.sp,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
               modifier = Modifier.weight(1f),
             )
-            Text("${node.trackCount} Titel", color = MutedGrey, fontSize = 12.sp)
+            Text("${node.trackCount} tracks", color = MutedGrey, fontSize = 12.sp)
           }
         }
         Spacer(Modifier.height(24.dp))

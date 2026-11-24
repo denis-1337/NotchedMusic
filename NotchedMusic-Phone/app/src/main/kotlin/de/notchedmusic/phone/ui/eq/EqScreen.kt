@@ -78,7 +78,7 @@ fun EqScreen(viewModel: AppViewModel) {
         .verticalScroll(rememberScrollState())
         .padding(horizontal = 20.dp, vertical = 8.dp),
   ) {
-    Text("KLANG", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+    Text("SOUND", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(10.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       settings.presets.forEach { item ->
@@ -105,7 +105,7 @@ fun EqScreen(viewModel: AppViewModel) {
     }
 
     Spacer(Modifier.height(16.dp))
-    SectionLabel("FILTERBÄNDER · ${Math.round(preset.preGainDb * 10) / 10.0} dB VORVERSTÄRKUNG")
+    SectionLabel("FILTER BANDS · ${Math.round(preset.preGainDb * 10) / 10.0} dB PRE-GAIN")
     Spacer(Modifier.height(8.dp))
     repeat(2) { rowIndex ->
       Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -136,7 +136,7 @@ fun EqScreen(viewModel: AppViewModel) {
     Spacer(Modifier.height(12.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
       PillButton(
-        text = "Preset zurücksetzen",
+        text = "Reset preset",
         onClick = viewModel::resetActivePreset,
         color = SurfaceRaised,
         modifier = Modifier.weight(1f),
@@ -163,9 +163,9 @@ private fun BandChip(
     }
   val stateText =
     when {
-      band.type == FilterType.OFF -> "aus"
-      !band.enabled -> "aus"
-      else -> "aktiv"
+      band.type == FilterType.OFF -> "off"
+      !band.enabled -> "off"
+      else -> "active"
     }
   Column(
     modifier =
@@ -228,7 +228,7 @@ private fun BandEditor(
     ) {
       Text("FILTER ${index + 1}", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
       Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Filter aktiv", color = MutedGrey, fontSize = 12.sp)
+        Text("Filter active", color = MutedGrey, fontSize = 12.sp)
         Spacer(Modifier.width(8.dp))
         Switch(
           checked = band.enabled,
@@ -239,7 +239,7 @@ private fun BandEditor(
     }
 
     Spacer(Modifier.height(8.dp))
-    Text("TYP", color = MutedGrey, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    Text("TYPE", color = MutedGrey, fontSize = 10.sp, fontWeight = FontWeight.Bold)
     Box(Modifier.fillMaxWidth()) {
       Box(
         modifier =
@@ -298,16 +298,16 @@ private fun BandEditor(
     }
 
     Spacer(Modifier.height(8.dp))
-    Text("Q: kleiner Wert = breit, großer Wert = schmal.", color = MutedGrey, fontSize = 10.sp)
+    Text("Q: lower value = wider, higher value = narrower.", color = MutedGrey, fontSize = 10.sp)
     Text(
-      if (band.usesGain) "Gain wirkt bei Bell und Shelves." else "Gain wird bei diesem Typ ignoriert.",
+      if (band.usesGain) "Gain applies to Bell and Shelves." else "Gain is ignored for this type.",
       color = MutedGrey,
       fontSize = 10.sp,
     )
 
     Spacer(Modifier.height(12.dp))
     NumberField(
-      label = "VOLUME · VORVERSTÄRKUNG DES PRESETS",
+      label = "VOLUME · PRESET PRE-GAIN",
       value = preset.preGainDb,
       unit = "dB",
       decimals = 1,
@@ -319,9 +319,9 @@ private fun BandEditor(
     Text(
       text =
         when {
-          band.type == FilterType.OFF || !band.enabled -> "Dieses Band ist aus."
-          band.frequencyHz > 15_000.0 -> "Frequenz liegt sehr hoch – bei 44,1 kHz greift die Nyquist-Grenze."
-          else -> "Änderungen wirken sofort auf die laufende Wiedergabe."
+          band.type == FilterType.OFF || !band.enabled -> "This band is off."
+          band.frequencyHz > 15_000.0 -> "Frequency is very high – at 44.1 kHz the Nyquist limit applies."
+          else -> "Changes apply immediately to current playback."
         },
       color = MutedGrey,
       fontSize = 11.sp,
@@ -335,7 +335,7 @@ private fun CopyPresetButton(viewModel: AppViewModel, modifier: Modifier) {
   var expanded by remember { mutableStateOf(false) }
   Box(modifier) {
     PillButton(
-      text = "Von Preset kopieren",
+      text = "Copy from preset",
       onClick = { expanded = true },
       color = SurfaceRaised,
       modifier = Modifier.fillMaxWidth(),
@@ -402,7 +402,7 @@ private fun NumberField(
 }
 
 private fun formatNumber(value: Double, decimals: Int): String =
-  if (decimals == 0) value.toInt().toString() else String.format(java.util.Locale.GERMANY, "%.${decimals}f", value)
+  if (decimals == 0) value.toInt().toString() else String.format(java.util.Locale.ENGLISH, "%.${decimals}f", value)
 
 private const val MIN_FREQUENCY_HZ = 20.0
 private const val MAX_FREQUENCY_HZ = 20_000.0

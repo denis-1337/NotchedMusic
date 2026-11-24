@@ -37,7 +37,7 @@ class ContentResolverAssetSource(private val context: Context) : AssetSource {
           context.contentResolver.openInputStream(parsed)
         } catch (_: Exception) {
           null
-        } ?: throw AssetPreparationException("Datei ist nicht mehr lesbar.")
+        } ?: throw AssetPreparationException("File is no longer readable.")
 
       val digest = MessageDigest.getInstance("SHA-256")
       var total = 0L
@@ -49,7 +49,7 @@ class ContentResolverAssetSource(private val context: Context) : AssetSource {
             if (read < 0) break
             total += read
             if (total > SyncProtocol.MAX_MUSIC_FILE_BYTES) {
-              throw AssetPreparationException("Datei ist größer als 40 MB.")
+              throw AssetPreparationException("File is larger than 40 MB.")
             }
             digest.update(buffer, 0, read)
           }
@@ -57,9 +57,9 @@ class ContentResolverAssetSource(private val context: Context) : AssetSource {
       } catch (error: AssetPreparationException) {
         throw error
       } catch (_: Exception) {
-        throw AssetPreparationException("Datei konnte nicht gelesen werden.")
+        throw AssetPreparationException("File could not be read.")
       }
-      if (total <= 0L) throw AssetPreparationException("Datei ist leer.")
+      if (total <= 0L) throw AssetPreparationException("File is empty.")
       PreparedAsset(total, digest.digest().joinToString("") { "%02x".format(it) })
     }
 

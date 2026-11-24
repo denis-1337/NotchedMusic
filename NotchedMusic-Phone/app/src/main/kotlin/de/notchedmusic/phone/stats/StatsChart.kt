@@ -73,7 +73,7 @@ private fun weekBars(
   today: LocalDate,
 ): List<StatsBar> {
   val monday = today.minusDays((today.dayOfWeek.value - 1).toLong()).plusWeeks(offset.toLong())
-  val labels = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+  val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
   return List(7) { index ->
     val date = monday.plusDays(index.toLong())
     StatsBar(labels[index], days[date] ?: 0L)
@@ -94,7 +94,7 @@ private fun monthBars(
   }
   return grouped.entries.map { (weekStart, activeMs) ->
     val week = weekStart.get(WeekFields.ISO.weekOfWeekBasedYear())
-    StatsBar("KW $week", activeMs)
+    StatsBar("Wk $week", activeMs)
   }
 }
 
@@ -105,7 +105,7 @@ private fun yearBars(
 ): List<StatsBar> {
   val year = today.year + offset
   val labels =
-    listOf("Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez")
+    listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   val sums = LongArray(12)
   for ((date, activeMs) in days) {
     if (date.year == year) sums[date.monthValue - 1] += activeMs

@@ -92,16 +92,16 @@ fun StatsScreen(
   ) {
     Text("STATISTICS", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     Text(
-      "EQ-Hörzeit auf diesem Phone – die Daten der Uhr kommen beim Sync dazu.",
+      "EQ listening time on this phone – watch data is added during sync.",
       color = MutedGrey,
       fontSize = 11.sp,
       modifier = Modifier.padding(top = 4.dp, bottom = 14.dp),
     )
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-      StatCard("GESAMT", formatStatDuration(stats.totalMs), Modifier.weight(1f))
-      StatCard("Ø / TAG", formatStatDuration(averageMs), Modifier.weight(1f))
-      StatCard("HEUTE", formatStatDuration(todayMs), Modifier.weight(1f))
+      StatCard("TOTAL", formatStatDuration(stats.totalMs), Modifier.weight(1f))
+      StatCard("AVG / DAY", formatStatDuration(averageMs), Modifier.weight(1f))
+      StatCard("TODAY", formatStatDuration(todayMs), Modifier.weight(1f))
     }
 
     Spacer(Modifier.height(18.dp))
@@ -126,7 +126,7 @@ fun StatsScreen(
     }
 
     Text(
-      text = "${formatStatDuration(chart.totalMs)} in diesem Zeitraum",
+      text = "${formatStatDuration(chart.totalMs)} in this period",
       color = MutedGrey,
       fontSize = 11.sp,
       modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 8.dp),
@@ -135,21 +135,21 @@ fun StatsScreen(
     StatsChart(chart.bars)
 
     if (stats.loading) {
-      Text("Statistik wird verdichtet…", color = MutedGrey, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp))
+      Text("Compacting statistics…", color = MutedGrey, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp))
     }
     stats.error?.let { error ->
       Text(error, color = DangerRed, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp))
     }
 
     Spacer(Modifier.height(20.dp))
-    SectionLabel("UHREN-SYNC")
+    SectionLabel("WATCH SYNC")
     Spacer(Modifier.height(6.dp))
     Text(
       text =
         when (sync.watchAvailable) {
-          true -> "Uhr erreichbar. Die Uhr-Statistik wird nach dem Übernehmen auf der Uhr gelöscht."
-          false -> "Uhr nicht erreichbar – bitte die Uhr-App öffnen."
-          null -> "Uhr wird gesucht…"
+          true -> "Watch reachable. Watch statistics are deleted on the watch after import."
+          false -> "Watch not reachable – please open the watch app."
+          null -> "Looking for watch…"
         },
       color = if (sync.watchAvailable == false) DangerRed else MutedGrey,
       fontSize = 11.sp,
@@ -159,13 +159,13 @@ fun StatsScreen(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Text("Uhr suchen", color = Blue, fontSize = 11.sp, modifier = Modifier.clickable { viewModel.checkWatchConnection() })
-      if (sync.isRunning && sync.operationLabel == "Statistik") {
-        Text("Sync läuft…", color = MutedGrey, fontSize = 11.sp)
+      Text("Find watch", color = Blue, fontSize = 11.sp, modifier = Modifier.clickable { viewModel.checkWatchConnection() })
+      if (sync.isRunning && sync.operationLabel == "Statistics") {
+        Text("Sync running…", color = MutedGrey, fontSize = 11.sp)
       }
     }
 
-    if (sync.isRunning && sync.operationLabel == "Statistik") {
+    if (sync.isRunning && sync.operationLabel == "Statistics") {
       LinearProgressIndicator(
         progress = { sync.progress?.fraction ?: 0f },
         modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
@@ -175,7 +175,7 @@ fun StatsScreen(
 
     if (sync.watchAvailable == true) {
       PillButton(
-        text = "UHR-STATISTIK SYNCHRONISIEREN",
+        text = "SYNC WATCH STATISTICS",
         onClick = viewModel::syncStatistics,
         enabled = !sync.isRunning,
         modifier = Modifier.fillMaxWidth(),
@@ -183,7 +183,7 @@ fun StatsScreen(
     }
 
     sync.message?.let { message ->
-      if (sync.operationLabel == "Statistik") {
+      if (sync.operationLabel == "Statistics") {
         Text(
           text = message,
           color = if (sync.messageIsError) DangerRed else Color.White,
@@ -194,7 +194,7 @@ fun StatsScreen(
     }
 
     Text(
-      "Die Uhr zählt nur laufende Musik mit aktivem Preset; Pause und Bypass zählen nicht.",
+      "The watch only counts playing music with an active preset; pause and bypass do not count.",
       color = MutedGrey,
       fontSize = 10.sp,
       modifier = Modifier.padding(top = 10.dp, bottom = 20.dp),
@@ -226,7 +226,7 @@ private fun StatCard(label: String, value: String, modifier: Modifier = Modifier
 
 @Composable
 private fun StatsPeriodSelector(period: StatsPeriod, onPeriod: (StatsPeriod) -> Unit) {
-  val labels = mapOf(StatsPeriod.WEEK to "WOCHE", StatsPeriod.MONTH to "MONAT", StatsPeriod.YEAR to "JAHR")
+  val labels = mapOf(StatsPeriod.WEEK to "WEEK", StatsPeriod.MONTH to "MONTH", StatsPeriod.YEAR to "YEAR")
   Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
     StatsPeriod.entries.forEach { entry ->
       val selected = period == entry
@@ -309,11 +309,11 @@ private fun periodLabel(period: StatsPeriod, offset: Int, today: LocalDate): Str
     StatsPeriod.WEEK -> {
       val monday = today.minusDays((today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong()).plusWeeks(offset.toLong())
       val week = monday.get(WeekFields.ISO.weekOfWeekBasedYear())
-      "KW $week"
+      "Wk $week"
     }
     StatsPeriod.MONTH -> {
       val month = YearMonth.from(today).plusMonths(offset.toLong())
-      "${month.month.getDisplayName(TextStyle.FULL, Locale.GERMANY)} ${month.year}"
+      "${month.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${month.year}"
     }
     StatsPeriod.YEAR -> "${today.year + offset}"
   }
@@ -325,5 +325,5 @@ private fun formatStatDuration(activeMs: Long): String {
   val minutes = activeMs / 60_000L
   if (minutes < 60L) return "$minutes min"
   val hours = minutes / 60.0
-  return String.format(Locale.GERMANY, "%.1f h", hours)
+  return String.format(Locale.ENGLISH, "%.1f h", hours)
 }

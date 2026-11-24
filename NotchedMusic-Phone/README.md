@@ -47,7 +47,7 @@ Release signing and installation instructions are in [`../docs/BUILD.md`](../doc
   to defaults for corrupt data.
 - **EQ statistics** — fourth tab with total time, all-time average per day, today's time and
   week/month/year charts; merges watch reports during sync.
-- **Accessibility** — dark OLED-friendly palette and large touch targets.
+- **Accessibility** — English UI, dark OLED-friendly palette and large touch targets.
 
 ## Sync with the watch
 

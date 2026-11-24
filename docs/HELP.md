@@ -1,5 +1,7 @@
 # Help — using NotchedMusic
 
+The NotchedMusic phone app uses an English user interface.
+
 NotchedMusic is a private Android music player built for **tinnitus retraining through notched
 music listening**. It is not a medical device. If sound is uncomfortable, painful or causes
 headaches, stop listening and seek medical advice.
@@ -10,7 +12,7 @@ app, and can return EQ listening statistics during sync.
 
 ## 1. Installation
 
-The easiest route for normal users is the [latest GitHub release](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.1): download the phone APK and the watch APK from the release assets and install them with Android's package installer. No Android Studio or Gradle setup is required.
+The easiest route for normal users is the [latest GitHub release](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0.2): download the phone APK and the watch APK from the release assets and install them with Android's package installer. No Android Studio or Gradle setup is required.
 
 The phone and watch apps must use the **same application package identity and signing key** so
 that the Wear Data Layer can find them. The watch app is installed as `de.notchedmusic.phone` but
