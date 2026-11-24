@@ -257,8 +257,8 @@ enum class FilterType {
   PEAKING,      // Bell
   LOW_SHELF,
   HIGH_SHELF,
-  LOW_CUT,      // Hochpass
-  HIGH_CUT      // Tiefpass
+  LOW_CUT,      // high-pass
+  HIGH_CUT      // low-pass
 }
 
 data class FilterBand(
@@ -506,7 +506,7 @@ data class Track(
   val uri: Uri,
   val documentId: String,
   val displayName: String,   // filename without extension
-  val title: String,         // Metadaten oder Dateiname
+  val title: String,         // metadata or filename
   val artist: String?,
   val album: String?,
   val durationMs: Long?,

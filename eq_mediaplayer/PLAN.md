@@ -168,9 +168,9 @@ Instead of `FilterProfiles` with `slotA`/`slotB`, the watch will save in the fut
 @Serializable
 data class WatchSettings(
   val version: Int = 2,
-  val presets: List<EqPreset> = DefaultPresets.three(), // genau p1, p2, p3
+  val presets: List<EqPreset> = DefaultPresets.three(), // exactly p1, p2, p3
   val activePresetId: String? = DefaultPresets.PRESET_1_ID, // null = Bypass
-  val volumeDb: Float = 0f,                              // Hörpegel, nie vom Phone gesetzt
+  val volumeDb: Float = 0f,                              // listening level, never set by the phone
   val keepScreenOn: Boolean = false,
   val ambientDimmed: Boolean = true,
   val lastPresetUpdateMs: Long = 0L,
@@ -720,7 +720,7 @@ gradlew.bat :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 cd Z:\android_projekte\NotchedMusic\NotchedMusic-Watch
 gradlew.bat app:testDebugUnitTest app:assembleDebug app:lintDebug
 
-:: Geräte
+:: Devices
 adb devices -l
 adb -s <phone> install -r app\build\outputs\apk\debug\app-debug.apk
 adb -s <watch> install -r app\build\outputs\apk\debug\app-debug.apk
