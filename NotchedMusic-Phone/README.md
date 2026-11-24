@@ -11,7 +11,7 @@ mirrored music to the companion Wear OS app over the Wear Data Layer.
 > The Wear OS app is a standalone player with its own real-time DSP and notch filtering. The phone
 > is not required for playback on the watch.
 
-Project status and detailed measurements are in [`projectstatus.md`](projectstatus.md).
+Project status and detailed measurements are in [`PROJECT_STATUS.md`](PROJECT_STATUS.md).
 
 ## Quick start
 

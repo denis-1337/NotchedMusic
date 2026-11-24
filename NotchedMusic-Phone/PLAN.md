@@ -1,78 +1,77 @@
-# NotchedMusic Phone – Umsetzungsplan
+# NotchedMusic Phone – Implementation plan
 
-> **Status: Planung, noch kein Code.**  
-> Erstellt aus `anforderungen1.txt`, den vier GUI-Mockups und dem vorhandenen
-> Referenzprojekt `Z:\android_projekte\NotchedMusic\NotchedMusic-Watch` (Wear-App).
+> **Status: Planning document, retained as historical design record.**  
+> Created from `requirements1.txt`, the four GUI mockups and the existing
+> Reference project `Z:\android_projects\NotchedMusic\NotchedMusic-Watch` (Wear app).
 >
-> **Projektgrenze: Das bestehende Uhr-Projekt wird in diesem Vorhaben nicht verändert.**
-> Die Uhr-App wird später – in einem separaten Schritt außerhalb dieses Projekts – an
-> drei Presets und das neue Synchronisationsprotokoll angepasst. Bis dahin bleibt die
-> Phone-App bei einer **Mock-Synchronisation**; es werden keine Dateien im Wear-Projekt
-> editiert, gebaut oder umstrukturiert.
+> **Project boundary: The existing watch project will not be changed in this project.**
+> The watch app will be added later - in a separate step outside of this project
+> three presets and the new synchronization protocol adapted. Until then it stays
+> Phone app during a **mock synchronization**; there are no files in the Wear project
+> edited, built or restructured.
 
 | | |
 |---|---|
-| Projektordner | `Z:\android_projekte\NotchedMusic\NotchedMusic-Phone` |
-| Mockups | `Z:\android_projekte\NotchedMusic\eq_mediaplayer\Screenshot *.png` |
-| Zielgerät | Google Pixel 10, Android 17 (API 37) |
-| App-Paket | `de.notchedmusic.phone` |
-| Projektname | `NotchedMusicPhone` |
-| Sprache | Kotlin, Compose, Material 3 |
-| Wiedergabe | Media3/ExoPlayer + eigener DSP-`AudioProcessor` |
-| Bibliothek | Storage Access Framework (SAF), kein `MANAGE_EXTERNAL_STORAGE` |
-| Synchronisation | Wear Data Layer, jetzt hinter einem Mock-Transport |
+| Project folder | `Z:\android_projects\NotchedMusic\NotchedMusic-Phone` |
+| Mockups | `Z:\android_projects\NotchedMusic\eq_mediaplayer\Screenshot *.png` |
+| Target device | Google Pixel 10, Android 17 (API 37) |
+| App package | `de.notchedmusic.phone` |
+| Project name | `NotchedMusicPhone` |
+| language | Kotlin, Compose, Material 3 |
+| Playback | Media3/ExoPlayer + own DSP `AudioProcessor` |
+| Library | Storage Access Framework (SAF), no `MANAGE_EXTERNAL_STORAGE` |
+| Synchronization | Wear Data Layer, now behind a mock transport |
 
 ---
 
-## 0. Umgebungscheck und Einrichtung des virtuellen Geräts
+## 0. Environment check and virtual device setup
 
-### 0.1 Umgebung (Stand nach dem Setup)
+### 0.1 Environment (as of after setup)
 
-| Prüfung | Ergebnis | Bewertung |
+| check | Result | Review |
 |---|---|---|
-| Android Studio | `AI-262.10968.63` (2026.2.2), JBR 25 | vorhanden |
-| Android SDK | `C:\Users\super\AppData\Local\Android\Sdk` | vorhanden |
-| SDK Platform | `android-37.0` (Android 17, API 37) | **vorhanden** |
-| Build-Tools | `36.0.0`, `36.1.0` | vorhanden |
-| Platform-Tools / adb | `37.0.1` | vorhanden |
-| Emulator | `37.2.13.0` | vorhanden |
-| Hardwarebeschleunigung | WHPX erkannt und nutzbar | vorhanden |
-| SDK Command-line Tools | `cmdline-tools/latest` (23.0 / Android CLI 1.1.16717390) | **installiert** |
-| System-Image API 37 | `system-images;android-37.0;google_apis;x86_64` (ca. 5,3 GB) | **installiert** |
-| AVD Pixel 10 | `Pixel_10_API_37`, 1080×2424, 420 dpi (422 ppi), Pixel-10-Skin, 4 GB RAM | **angelegt und gebootet** |
-| Weitere AVDs | `Medium_Phone_API_36.1`, `Wear_OS_Large_Round` | unverändert vorhanden |
-| Gradle | kein globales `gradle`, aber Wrapper-Distribution 9.6.0 im Cache | Wrapper reicht |
-| JDK | `JAVA_HOME` = Zulu 21; Studio-JBR 25 | Gradle 9.6 läuft, bereits verifiziert |
-| Gradle-Cache | AGP 9.5.1, Kotlin 2.3.20, Compose BOM 2026.09.00, Media3 1.11.1 | gute Ausgangslage |
-| Internet | erreichbar | Downloads möglich |
-| Freier Speicher | ca. 535 GB auf C: | ausreichend |
+| Android Studio | `AI-262.10968.63` (2026.2.2), JBR 25 | available |
+| Android SDK | `C:\Users\super\AppData\Local\Android\Sdk` | available |
+| SDK Platform | `android-37.0` (Android 17, API 37) | **available** |
+| Build tools | `36.0.0`, `36.1.0` | available |
+| Platform tools / adb | `37.0.1` | available |
+| Emulator | `37.2.13.0` | available |
+| Hardware acceleration | WHPX recognized and usable | available |
+| SDK Command-line Tools | `cmdline-tools/latest` (23.0 / Android CLI 1.1.16717390) | **installed** |
+| System image API 37 | `system-images;android-37.0;google_apis;x86_64` (approx. 5.3 GB) | **installed** |
+| AVD Pixel 10 | `Pixel_10_API_37`, 1080×2424, 420 dpi (422 ppi), Pixel 10 skin, 4 GB RAM | **created and booted** |
+| More AVDs | `Medium_Phone_API_36.1`, `Wear_OS_Large_Round` | existing unchanged |
+| Gradle | no global `gradle`, but wrapper distribution 9.6.0 in cache | Wrapper is enough |
+| JDK | `JAVA_HOME` = Zulu 21; Studio JBR 25 | Gradle 9.6 is running, already verified |
+| Gradle cache | AGP 9.5.1, Kotlin 2.3.20, Compose BOM 2026.09.00, Media3 1.11.1 | good starting position |
+| Internet | reachable | Downloads possible |
+| Free memory | about 535 GB on C: | sufficient |
 
-### 0.2 Setup-Ergebnis
+### 0.2 Setup result
 
-Erledigt:
+Done:
 
-1. **Android SDK Command-line Tools** installiert:
+1. **Android SDK Command-line Tools** installed:
    `C:\Users\super\AppData\Local\Android\Sdk\cmdline-tools\latest`.
-   Das moderne CLI heißt `android.exe`; `sdkmanager.bat` und
-   `avdmanager.bat` sind ebenfalls vorhanden.
-2. **System-Image API 37** installiert:
+   The modern CLI is called `android.exe`; `sdkmanager.bat` and
+   `avdmanager.bat` are also present.
+2. **System image API 37** installed:
    `system-images;android-37.0;google_apis;x86_64`.
-3. **AVD „Pixel 10 / Android 17“** angelegt:
-   `Pixel_10_API_37`, 1080×2424, 420 dpi (422 ppi), Pixel-10-Skin,
-   4 GB RAM, 2 GB SD-Karte,
-   10 GB Datenpartition. Der Emulator bootet erfolgreich; `adb` meldet
+3. **AVD “Pixel 10 / Android 17”** created:
+   `Pixel_10_API_37`, 1080×2424, 420 dpi (422 ppi), Pixel 10 skin,
+   4GB RAM, 2GB SD card,
+   10GB data partition. The emulator boots successfully; `adb` reports
    `Android 17 / SDK 37`.
 
-### 0.3 Brauche ich deine Hilfe?
+### 0.3 Do I need your help?
 
-**Das SDK-Setup ist erledigt; für die Entwicklung ist keine GUI-Hilfe mehr
-nötig.** Offen bleibt nur der spätere Test auf echter Hardware:
-**Bluetooth-Kopfhörer lassen sich im Emulator nicht real testen.** A2DP und die
-Stabilität mit echten Headsets müssen später auf dem Pixel 10 / einem echten
-Gerät geprüft werden; im Emulator testen wir Wiedergabe, UI, SAF, DSP und
-Zustandswechsel.
+**The SDK setup is done; there is no longer any GUI help for development
+necessary.** Only the later test on real hardware remains open:
+**Bluetooth headphones cannot be tested in real life in the emulator.** A2DP and the
+Stability with real headsets will have to be on the Pixel 10 / a real one laterdevice to be checked; in the emulator we test playback, UI, SAF, DSP and
+Change of state.
 
-### 0.4 Befehle für das Setup (Referenz)
+### 0.4 Commands for Setup (Reference)
 
 ```bat
 set SDK=C:\Users\super\AppData\Local\Android\Sdk
@@ -90,67 +89,67 @@ set SDK=C:\Users\super\AppData\Local\Android\Sdk
 %SDK%\platform-tools\adb.exe devices
 ```
 
-Hinweis: `avdmanager.bat` mit dem Paketpfad funktioniert zuverlässig aus einer
-Batch-Datei; die verschachtelte Quoting-Form direkt aus der Shell kann den
-Paketpfad zerschneiden.
+Note: `avdmanager.bat` with the package path works reliably from a
+batch file; the nested quoting form directly from the shell can
+Cut package path.
 
-AVD-Werte:
+AVD values:
 
-| Einstellung | Wert |
+| Setting | Value |
 |---|---|
-| Gerät | Pixel 10 |
+| Device | Pixel 10 |
 | System | Android 17 / API 37, x86_64 |
-| Auflösung / Dichte | 1080×2424 / 420 dpi (422 ppi) |
-| Geräterahmen / Skin | `pixel_10` |
-| RAM | 4096 MB |
-| Heap | 512 MB |
-| Datenpartition | 10 GB |
-| SD-Karte | 2 GB |
-| GPU | automatisch (WHPX ist aktiv) |
-| Netzwerk | an (für Cover-Abfrage) |
+| Resolution/Density | 1080×2424 / 420 dpi (422 ppi) |
+| Device frame / skin | `pixel_10` |
+| RAM | 4096MB |
+| Heap | 512MB |
+| Data partition | 10GB |
+| SD card | 2GB |
+| GPU | automatically (WHPX is active) |
+| Network | to (for cover query) |
 
 ---
 
-## 1. Ziel und Abgrenzung
+## 1. Goal and boundaries
 
-Die App ist ein **Tinnitus-Retraining-Player**: Musik wird über Bluetooth-
-Kopfhörer wiedergegeben und mit einem engmaschigen Notch-Filter bearbeitet.
-Die Tinnitus-Frequenz und die Filter müssen präzise einstellbar sein; die
-Bedienung im Alltag muss aber auch für technisch unaffine Nutzer funktionieren.
+The app is a **tinnitus retraining player**: music is played via Bluetooth
+Played through headphones and processed with a close-meshed notch filter.
+The tinnitus frequency and filters must be precisely adjustable; the
+However, everyday operation must also work for users who are not technically savvy.
 
-**Im Umfang:**
+**In scope:**
 
-- Musik aus einem vom Nutzer gewählten Ordner abspielen.
-- Ordner-/Titel-Navigation mit Vor/Zurück.
-- Drei lokale EQ-Presets mit je sechs Filtern.
-- Filtertypen: aus, Notch, Bell, Highshelf, Lowshelf, Lowcut, Highcut.
-- Preamp/Trim, Lautstärke, Softlimiter, Clipping-Anzeige.
-- Album-Cover aus Datei-Metadaten, sonst Online-Fallback.
-- Sinuston zur Tinnitus-Frequenzbestimmung.
-- Setup-Seite mit Ordnereinstellung und „Send to Watch“.
-- Synchronisationsseite mit Musik- und EQ-Sync als **Mockup**.
-- Deutsche Oberfläche, dunkles Design entsprechend den Mockups.
+- Play music from a user-selected folder.
+- Folder/title navigation with forward/back.
+- Three local EQ presets with six filters each.
+- Filter types: off, notch, bell, highshelf, lowshelf, lowcut, highcut.
+- Preamp/Trim, volume, soft limiter, clipping display.
+- Album art from file metadata, otherwise online fallback.
+- Sine tone for tinnitus frequency determination.
+- Setup page with folder setting and “Send to Watch”.
+- Synchronization page with music and EQ sync as a **mockup**.
+- German interface, dark design according to the mockups.
 
-**Nicht im Umfang dieses Projekts:**
+**Not within the scope of this project:**
 
-- Implementierung der Uhr-App.
-- **Jede Änderung am bestehenden Uhr-Projekt** `AndroidStudioProjects/NotchedMusic`
-  (Paket, DSP, Empfänger, Manifest, Build-Dateien). Die Anpassung der Uhr an drei
-  Presets und das neue Protokoll erfolgt später separat.
-- Echtes Wear-Data-Layer-Protokoll in der ersten Ausbaustufe.
-- Streamingdienste, Podcasts, Videos, Cloud-Musik.
-- Mehrbenutzerverwaltung, Werbung, Analytics.
-- Klangliche „Verbesserung“ um jeden Preis: Im Mittelpunkt stehen
-  Rechenaufwand, Stabilität, Akku und ein sauberes Notch-/Limiter-Verhalten.
+- Implementation of the watch app.
+- **Any change to the existing watch project** `AndroidStudioProjects/NotchedMusic`
+  (Package, DSP, Receiver, Manifest, Build Files). The adjustment of the watch to three
+  Presets and the new protocol will be done separately later.
+- Real wear data layer protocol in the first expansion stage.
+- Streaming services, podcasts, videos, cloud music.
+- Multi-user management, advertising, analytics.
+- Sound “improvement” at all costs: Be the focus
+  Computing effort, stability, battery and clean notch/limiter behavior.
 
 ---
 
-## 2. Architekturüberblick
+## 2. Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Compose-UI                                                          │
-│  Player · EQ · Setup · Synchronize                                    │
+│  Compose UI                                                          │
+│  Player · EQ · Setup · Sync                                    │
 └───────────────┬─────────────────────────────────────────────────────┘
                 │ StateFlow / ViewModel
 ┌───────────────▼─────────────────────────────────────────────────────┐
@@ -160,28 +159,28 @@ Bedienung im Alltag muss aber auch für technisch unaffine Nutzer funktionieren.
 └───────┬───────────────────────┬───────────────────────┬────────────┘
         │                       │                       │
 ┌───────▼────────┐     ┌────────▼────────┐     ┌───────▼──────────┐
-│ :core (pure)   │     │ Playback-Backend │     │ Persistenz        │
-│ DSP, Modelle,  │     │ Media3-ExoPlayer │     │ DataStore/JSON    │
-│ Protokoll-DTO  │     │ AudioProcessor   │     │ SAF-Index (RAM)   │
+│ :core (pure)   │     │ Playback backend │     │ Persistence        │
+│ DSP, models,  │     │ Media3-ExoPlayer │     │ DataStore/JSON    │
+│ Protocol DTO  │     │ AudioProcessor   │     │ SAF index (RAM)   │
 └───────┬────────┘     │ MediaSession     │     └───────┬──────────┘
         │              └────────┬─────────┘             │
         │                       │                       │
         └───────────────┬───────┴───────────────────────┘
                         │
-                 AudioTrack → System → A2DP → Bluetooth-Kopfhörer
+                 AudioTrack → System → A2DP → Bluetooth headphones
 ```
 
-### 2.1 Module
+### 2.1 Modules
 
-| Modul | Inhalt | Abhängigkeiten |
+| Module | Content | Dependencies |
 |---|---|---|
-| `:core` | reine Kotlin/JVM-Bibliothek: DSP, Filter-/Preset-Modelle, Sync-DTOs, Validierung | keine Android-Abhängigkeiten |
-| `:app` | Android-App: UI, Wiedergabe, SAF, Cover, Sync-Mock | `:core`, AndroidX, Media3 |
+| `:core` | pure Kotlin/JVM library: DSP, filter/preset models, sync DTOs, validation | no Android dependencies |
+| `:app` | Android App: UI, Playback, SAF, Cover, Sync Mock | `:core`, AndroidX, Media3 |
 
-` :core` ist bewusst Android-frei, damit DSP-Tests auf dem PC laufen und die
-gleiche Rechenlogik später von der Uhr-App übernommen werden kann.
+` :core` is deliberately Android-free so that DSP tests can run on the PC and the
+The same calculation logic can later be adopted by the watch app.
 
-### 2.2 Paketstruktur in `:app`
+### 2.2 Package structure in `:app`
 
 ```
 de.notchedmusic.phone
@@ -215,49 +214,46 @@ de.notchedmusic.phone
 
 ---
 
-## 3. Anforderungen → Umsetzung → Abnahme
+## 3. Requirements → Implementation → Acceptance
 
-| Anforderung | Umsetzung | Abnahmekriterium |
+| Requirement | Implementation | Acceptance criterion |
 |---|---|---|
-| Root-Ordner definieren | SAF-Ordnerauswahl in Setup, persistierbare URI-Berechtigung | Nach Neustart bleibt der Ordner samt Leseberechtigung erhalten |
-| Root + Unterordner auswählbar | Nur Root und **direkte** Unterordner sind Navigationspunkte | Vor/Zurück erreicht jede dieser Ebenen; tiefere Ebenen erscheinen nicht als eigene Ordner |
-| Titel rekursiv aus dem gewählten Ordner | Scanner sammelt alle Audiodateien unter dem gewählten Knoten, egal wie tief | Root enthält alle Titel; Unterordner enthält alle Titel seines Teilbaums |
-| Titelauswahl vor/zurück | Titelzeile mit Pfeilen; kein Such-Slider | Pfeile wechseln Titel zyklisch; Play startet den aktuellen Titel |
-| Play/Stop | MediaSessionService + ExoPlayer | Play/Stop mit Hardware-, Kopfhörer- und UI-Bedienung |
-| Album-Cover automatisch | eingebettetes Cover zuerst; sonst Online-Fallback; Cache | Cover erscheint ohne UI-Blockade; offline bleibt Platzhalter |
-| MP3 priorisiert, gängige Formate | ExoPlayer-Decoder + Dateiendungsfilter | MP3, M4A/AAC, OGG/Opus, FLAC, WAV werden erkannt und abgespielt |
-| Nur Musik | Dateiendungs- und MIME-Filter, kein Video | Unbekannte Formate werden übersprungen, nicht als Fehlerdialog |
-| Lautstärke System/App | eigener App-Gain **und** Systemlautstärke | App-Regler ändert hörbar, Systemregler zusätzlich; kein Klemmen |
-| EQ-Bypass (standardmäßig aus) | Modus `BYPASS`: Filter und PreGain werden übersprungen | Bypass lässt den Klang unverändert; Player-Lautstärke und Limiter bleiben aktiv |
-| Preset-Dropdown unten rechts | Auswahl aus drei Presets | Auswahl wirkt sofort und wird gespeichert |
-| Drei Presets, je sechs Filter | `EqPreset` mit maximal sechs `FilterBand`s | Genau drei Presets; sechster Filter bleibt erhalten; siebter wird abgeschnitten |
-| Filter auswählen (blauer Rahmen) | Selektion im Band-Editor | Auswahl zeigt blauen Rahmen; nur der gewählte Band wird editiert |
-| Filter on/off (grün) | `enabled`-Schalter im gewählten Band | Grün = aktiv; aus = visuell anders; Klang ändert sich sofort |
-| Filtertypen inkl. off | `OFF`, `NOTCH`, `PEAKING`, `LOW_SHELF`, `HIGH_SHELF`, `LOW_CUT`, `HIGH_CUT` | Jeder Typ ist wählbar und ergibt einen stabilen Filter |
-| Freq/Q/Gain/Volume per Tastatur | `OutlinedTextField` mit Dezimalkomma/-punkt und Einheiten | Werte werden validiert, geklemmt und sofort übernommen |
-| Volume als Trim/Preamp | `preGainDb` je Preset, vor der Filterkette | Reduziert Pegel, bevor Filter ihn anheben; wird im Bypass übersprungen |
-| Softlimiter gegen Clipping | stereo-verkoppelter Limiter, Decke −1 dBFS, vor 16-Bit-Wandlung | Ausgang überschreitet die Decke nicht; kein hörbares Knacken |
-| Clipping-Anzeige am Player | Peak-Messung vor dem Limiter, Badge am Volume-Slider | Anzeige leuchtet bei Begrenzung, ohne den Regler zu verstellen |
-| Setup: Send to Watch → Sync | Navigation zur Synchronize-Seite | Button öffnet die Sync-Seite |
-| Root-Folder-Anzeige | lesbarer Pfad/URI-Name in Setup | Bei entzogenem Zugriff erscheint ein verständlicher Hinweis |
-| Sinuston zur Frequenzbestimmung | eigener `AudioTrack`-Generator, 10-Hz-Slider, ±1-Hz-Buttons | Frequenz und Lautstärke werden exakt angezeigt und hörbar |
-| Sync-Seite: Root + Unterordner | Checkbox-Liste mit Root und direkten Kindordnern | Auswahl zeigt Titelanzahl/geschätzte Größe |
-| Sync Musik | Mock-Transport, später Data-Layer-Asset-Upload | Fortschritt/Status erscheinen; echte Übertragung klar als „später“ markiert |
-| Sync EQs | Mock-Transport, später `profiles_json` | Alle drei Presets samt Filtern werden als DTO übertragen |
-| Rechte automatisch prüfen/anfordern | SAF-Permission + gezielte Runtime-Permissions | Kein Startabbruch durch fehlende Rechte; Hinweis mit Aktion |
-| Technisch unaffine Nutzer | große Ziele, klare deutsche Texte, sichere Defaults | Ein Laie kann Musik wählen und abspielen, ohne die EQ-Seite zu verstehen |
-| Performance | reine DSP-Kette, keine Allokation pro Buffer, langsamer Scan im Hintergrund | Messwerte siehe Abschnitt 13.6 |
+| Define root folder | SAF folder selection in setup, persistable URI permission | After restarting, the folder remains intact, including read permission
+| Root + subfolder selectable | Only root and **direct** subfolders are navigation items | Forward/Back reaches each of these levels; deeper levels do not appear as separate folders |
+| Title recursively from the selected folder | Scanner collects all audio files under the selected node, no matter how deep | Root contains all titles; Subfolder contains all titles of its subtree || Title selection forward/back | title line with arrows; no search slider | Arrows change titles cyclically; Play starts the current title |
+| Play/Stop | MediaSessionService + ExoPlayer | Play/Stop with hardware, headphone and UI operation |
+| Album art automatically | embedded cover first; otherwise online fallback; Cache | Cover appears without UI blockage; offline remains placeholder |
+| MP3 prioritized, common formats | ExoPlayer decoder + file extension filter | MP3, M4A/AAC, OGG/Opus, FLAC, WAV are recognized and played |
+| Just music | File extension and MIME filter, no video | Unknown formats are skipped, not as an error dialog |
+| Volume system/app | own app gain **and** system volume | App controller changes audibly, system controller also changes; no clamping |
+| EQ bypass (off by default) | `BYPASS` mode: Filter and PreGain are skipped | Bypass leaves the sound unchanged; Player volume and limiter remain active |
+| Preset dropdown at bottom right | Choice of three presets | Selection takes effect immediately and is saved |
+| Three presets, six filters each | `EqPreset` with a maximum of six `FilterBand`s | Exactly three presets; sixth filter remains; seventh is cut off |
+| Select filter (blue frame) | Selection in the band editor | Selection shows blue frame; only the selected volume will be edited |
+| Filter on/off (green) | `enabled` switch in the selected band | Green = active; off = visually different; Sound changes instantly |
+| Filter types including off | `OFF`, `NOTCH`, `PEAKING`, `LOW_SHELF`, `HIGH_SHELF`, `LOW_CUT`, `HIGH_CUT` | Each type is selectable and results in a stable filter |
+| Freq/Q/Gain/Volume via keyboard | `OutlinedTextField` with decimal point/point and units | Values ​​are validated, clamped and applied immediately |
+| Volume as Trim/Preamp | `preGainDb` per preset, before the filter chain | Reduces level before filters increase it; is skipped in the bypass |
+| Soft limiter against clipping | stereo-linked limiter, ceiling −1 dBFS, before 16-bit conversion | exit does not exceed the ceiling; no audible cracking |
+| Clipping display on the player | Peak measurement before the limiter, badge on the volume slider | Display lights up when limiting without adjusting the controller |
+| Setup: Send to Watch → Sync | Navigation to the Synchronize page | Button opens the sync page |
+| Root Folder Display | readable path/URI name in Setup | If access is revoked, an understandable message will appear |
+| Sine tone for frequency determination | own 'AudioTrack' generator, 10 Hz slider, ±1 Hz buttons | Frequency and volume are accurately displayed and audible |
+| Sync page: root + subfolder | Checkbox list with root and direct child folders | Selection shows number of titles/estimated size |
+| Sync Music | Mock transport, later data layer asset upload | Progress/Status appears; real transfer clearly marked as “later” |
+| Sync EQs | Mock transport, later `profiles_json` | All three presets including filters are transferred as DTO |
+| Check/request rights automatically | SAF permission + targeted runtime permissions | No start abort due to missing rights; Notice with action |
+| Technically inexperienced users | big targets, clear German texts, safe defaults | A layman can select and play music without understanding the EQ side |
+| Performance | pure DSP chain, no allocation per buffer, slow scan in the background | For measured values ​​see section 13.6 |
 
 ---
 
-## 4. Datenmodell
+## 4. Data model
 
-### 4.1 Filter
-
-```kotlin
+### 4.1 Filters```kotlin
 enum class FilterType {
-  OFF,          // Band wird nicht gerechnet
-  NOTCH,        // vollständige Auslöschung bei frequencyHz
+  OFF,          // Band is not processed
+  NOTCH,        // complete cancellation at frequencyHz
   PEAKING,      // Bell
   LOW_SHELF,
   HIGH_SHELF,
@@ -274,11 +270,11 @@ data class FilterBand(
 )
 ```
 
-- `gainDb` wirkt nur bei Peak/Shelf. Bei Notch, Lowcut und Highcut wird der
-  Wert ignoriert, aber gespeichert, damit ein Typwechsel nichts verliert.
-- `enabled = false` entspricht klanglich `OFF`, das Band bleibt aber zum
-  Bearbeiten erhalten.
-- Alle sechs Bänder werden immer angezeigt, auch wenn einige aus sind.
+- `gainDb` only works on peak/shelf. For notch, lowcut and highcut the
+  Value ignored, but saved so that a type change does not lose anything.
+- `enabled = false` corresponds to `OFF` in terms of sound, but the band remains
+  Edit received.
+- All six bands are always displayed, even if some are off.
 
 ### 4.2 Preset
 
@@ -286,46 +282,46 @@ data class FilterBand(
 data class EqPreset(
   val id: String,             // stabil: "p1", "p2", "p3"
   val name: String,           // "Preset 1" ...
-  val preGainDb: Double = 0.0, // Trim/Preamp vor den Filtern
+  val preGainDb: Double = 0.0, // Trim/preamp before the filters
   val bands: List<FilterBand> = List(6) { FilterBand(...) },
 )
 ```
 
-- Drei Presets werden als geordnete Liste gespeichert. Das ist die verbindliche
-  Zielstruktur; Preset 3 ist kein optionales Anhängsel.
-- Es ist **immer genau ein Preset aktiv**, niemals eine Stapelung.
-- Die Uhr-App wird später separat auf diese drei Presets angepasst. Das Phone-Projekt
-  schickt im Sync-DTO immer alle drei Presets und wartet nicht auf ein Legacy-Format.
-- `preGainDb` gehört zum Klangrezept und wird später mit zum Watch-Sync
-  übertragen.
-- Der Player-Lautstärkeregler ist **nicht** Teil des Presets. Er gehört dem
-  Nutzer und wird nie durch einen Sync verstellt.
+- Three presets are saved as an ordered list. That is the binding one
+  target structure; Preset 3 is not an optional appendage.
+- There is **always exactly one preset active**, never a stack.
+- The watch app will later be customized to these three presets separately. The Phone Project
+  always sends all three presets in the sync DTO and does not wait for a legacy format.
+- `preGainDb` is part of the sound recipe and later becomes part of the watch sync
+  transferred.
+- The player volume control is **not** part of the preset. He belongs to that
+  User and is never adjusted by a sync.
 
-### 4.3 Grenzen und Validierung
+### 4.3 Limits and Validation
 
-| Wert | Bereich | Begründung |
+| Value | Area | Justification |
 |---|---|---|
-| Frequenz | 20 Hz bis `min(20 000 Hz, 0,45 × SampleRate)` | nahe Nyquist wird unzuverlässig |
-| Q | 0,1 bis 30 | darüber schmiert ein Notch hörbar |
-| Gain je Band | ±24 dB | genug Reserve für Notch und Shelves |
-| Preamp (`preGainDb`) | ±12 dB | Clipping-Vorsorge und Pegelangleich |
-| Player-Volume | −60 bis 0 dB | 0 dB = voll; System bleibt zusätzlich dahinter |
-| Bänder je Preset | 6 | Anforderung |
-| Presets | 3 | Anforderung |
-| Summen-Anhebung | max. +12 dB | verhindert zu viel Boost vor dem Limiter |
+| Frequency | 20 Hz to `min(20 000 Hz, 0.45 × SampleRate)` | near Nyquist becomes unreliable |
+| Q | 0.1 to 30 | A notch smeared above it audibly |
+| Gain per band | ±24 dB | enough reserve for notch and shelves |
+| Preamp(`preGainDb`) | ±12dB | Clipping prevention and level adjustment |
+| Player volume | −60 to 0 dB | 0 dB = full; System also remains behind |
+| Bands per preset | 6 | Requirement |
+| Presets | 3 | Requirement |
+| Total increase | max. +12 dB | prevents too much boost before the limiter |
 
-Die Validierung läuft **einmal beim Ändern eines Presets**, nicht pro Sample.
-Ungültige Werte werden geklemmt und im UI erklärt; die Audio-Kette wirft nie
-wegen einer Nutzereingabe.
+Validation runs **once when changing a preset**, not per sample.
+Invalid values ​​are clamped and declared in the UI; the audio chain never throws
+because of a user input.
 
-### 4.4 Einstellungen
+### 4.4 Settings
 
 ```kotlin
 data class AppSettings(
   val rootUri: String? = null,
   val presets: List<EqPreset> = DefaultPresets.three(),
   val activePresetId: String? = "p1",
-  val eqBypass: Boolean = true,          // Anforderung: standardmäßig aus
+  val eqBypass: Boolean = true,          // Requirement: off by default
   val playerVolumeDb: Float = 0f,
   val repeatMode: RepeatMode = RepeatMode.ALL,
   val autoAdvance: Boolean = true,
@@ -335,103 +331,102 @@ data class AppSettings(
 )
 ```
 
-Standard-Presets:
+Standard presets:
 
-- **Preset 1:** leerer, neutraler Ausgangszustand; Notch 8 kHz als
-  hilfreicher Startpunkt, alle anderen Bänder `OFF`.
-- **Preset 2:** breiterer Notch (z. B. 6 kHz, Q 4, −20 dB).
-- **Preset 3:** leer, damit der Nutzer ein eigenes Rezept aufbauen kann.
+- **Preset 1:** empty, neutral initial state; Notch 8 kHz as
+  helpful starting point, all other bands `OFF`.
+- **Preset 2:** wider notch (e.g. 6 kHz, Q 4, −20 dB).
+- **Preset 3:** empty so that the user can build their own recipe.
 
-`eqBypass = true` ist Absicht: Beim ersten Start soll der Player
-„einfach Musik“ spielen. Erst wer den Notch braucht, aktiviert den EQ.
+`eqBypass = true` is intentional: the player should be on the first start
+“just play music”. Only when you need the notch do you activate the EQ.
 
 ---
 
-## 5. DSP und Audiokette
+## 5. DSP and audio chain
 
-### 5.1 Signalweg
+### 5.1 Signal path
 
 ```
-Datei → ExoPlayer-Decoder → Float-PCM
-   → Preset-PreGain (nur wenn EQ aktiv)
-   → 6 Biquads pro Kanal (nur bei aktivem Band)
-   → Player-Volume
-   → Softlimiter (Decke −1 dBFS)
-   → 16-Bit-Wandlung
-   → AudioTrack → Systemlautstärke → A2DP → Kopfhörer
+File → ExoPlayer decoder → float PCM
+   → preset preGain (only when EQ is active)
+   → 6 biquads per channel (only active bands)
+   → player volume
+   → soft limiter (ceiling −1 dBFS)
+   → 16-bit conversion
+   → AudioTrack → system volume → A2DP → headphones
 ```
 
-Bei `BYPASS` entfallen PreGain und Biquads; **Player-Volume und Limiter
-bleiben aktiv**. So bleibt die Lautstärke beim Umschalten konstant und der
-Ausgang kann nicht übersteuern.
+With `BYPASS`, PreGain and Biquads are omitted; **Player volume and limiter
+remain active**. So the volume remains constant when switching and the
+Output cannot override.
 
 ### 5.2 Biquad
 
-- RBJ-Cookbook, **Transposed Direct Form II**.
-- Koeffizienten in `Double`, Zustand in `Float`.
-- Fünf Multiplikationen und vier Additionen pro Sample und Kanal; für alle
-  sechs Filtertypen gleich teuer.
-- Koeffizientenwechsel werden über ca. 128 Samples überblendet, damit
-  Preset-/Reglerwechsel nicht knacken.
-- Sample-Rate kommt aus dem tatsächlichen Audio-Ausgang; bei 44,1/48/96 kHz
-  werden die Koeffizienten neu berechnet. Ein Ratewechsel ist ein
-  Neuaufbau, kein laufender Mischfall.
+- RBJ Cookbook, **Transposed Direct Form II**.
+- Coefficients in `Double`, state in `Float`.
+- Five multiplications and four additions per sample and channel; for everyone
+  Six types of filters cost the same.
+- Coefficient changes are faded over approx. 128 samples, so that
+  No cracking when changing presets/controllers.
+- Sample rate comes from actual audio output; at 44.1/48/96 kHz
+  the coefficients are recalculated. A rate change is a
+  New construction, not an ongoing mixed case.
 
-Formeln (RBJ):
+Formulas (RBJ):
 
-| Typ | Koeffizienten |
+| Type | Coefficients |
 |---|---|
 | Notch | `b0 = 1`, `b1 = −2 cos ω₀`, `b2 = 1`, `a0 = 1 + α`, `a1 = −2 cos ω₀`, `a2 = 1 − α` |
-| Peaking/Bell | mit `A = 10^(gain/40)`: `b0 = 1 + αA`, `b1 = −2 cos ω₀`, `b2 = 1 − αA`, `a0 = 1 + α/A`, `a1 = −2 cos ω₀`, `a2 = 1 − α/A` |
-| LowShelf / HighShelf | Standard-RBJ-Shelf mit `α = sin ω₀ / √2` bzw. Q |
-| LowCut | Hochpass: `b0 = (1+cos ω₀)/2`, `b1 = −(1+cos ω₀)`, `b2 = (1+cos ω₀)/2`, `a0 = 1+α`, `a1 = −2 cos ω₀`, `a2 = 1−α` |
-| HighCut | Tiefpass: `b0 = (1−cos ω₀)/2`, `b1 = 1−cos ω₀`, `b2 = (1−cos ω₀)/2`, `a0 = 1+α`, `a1 = −2 cos ω₀`, `a2 = 1−α` |
+| Peaking/Belling | with `A = 10^(gain/40)`: `b0 = 1 + αA`, `b1 = −2 cos ω₀`, `b2 = 1 − αA`, `a0 = 1 + α/A`, `a1 = −2 cos ω₀`, `a2 = 1 − α/A` |
+| LowShelf / HighShelf | Standard RBJ shelf with `α = sin ω₀ / √2` or Q |
+| LowCut | High pass: `b0 = (1+cos ω₀)/2`, `b1 = −(1+cos ω₀)`, `b2 = (1+cos ω₀)/2`, `a0 = 1+α`, `a1 = −2 cos ω₀`, `a2 = 1−α` || HighCut | Low pass: `b0 = (1−cos ω₀)/2`, `b1 = 1−cos ω₀`, `b2 = (1−cos ω₀)/2`, `a0 = 1+α`, `a1 = −2 cos ω₀`, `a2 = 1−α` |
 
-Bei Lowcut/Highcut wird `Q` als Flankengüte verwendet; Standard 0,707.
-Gain wird ignoriert.
+For lowcut/highcut, `Q` is used as edge quality; Standard 0.707.
+Gain is ignored.
 
-### 5.3 Softlimiter
+### 5.3 Soft limiter
 
-- Stereo-verkoppelt: **eine** Verstärkung für beide Kanäle, damit das
-  Stereobild bei lauten Stellen nicht zusammenklappt.
-- Decke **−1 dBFS**; darunter bleibt Luft für Codec-/Rundungsreste.
-- Angriff sofort, Erholung exponentiell über ca. 50 ms.
-- Zusätzlicher harter Deckel nur als letzte Rundungsabsicherung.
-- Bewusst keine Vorausschau in der ersten Version: kein Latenzaufbau, keine
-  komplexe Zustandsmaschine. Wenn Hörtests transienten Druck zeigen, kann
-  später ein 1-ms-Lookahead nachgerüstet werden; das ist eine eigene
-  Messentscheidung, keine Voraussetzung.
-- Der Limiter ist **kein** Ersatz für sinnvolle Presets. Die Summen-Anhebung
-  wird bereits beim Speichern begrenzt.
+- Stereo-linked: **one** gain for both channels, so that
+  Stereo image does not collapse in loud places.
+- Ceiling **−1 dBFS**; There is room underneath for codec/rounding residues.
+- Attack immediately, recovery exponentially over about 50 ms.
+- Additional hard lid only as a final rounding protection.
+- Deliberately no look-ahead in the first version: no latency build-up, none
+  complex state machine. If hearing tests show transient pressure, may
+  a 1 ms lookahead can be added later; this is its own
+  Measurement decision, not a requirement.
+- The limiter is **not** a replacement for useful presets. The total increase
+  is already limited when saving.
 
-### 5.4 Clipping-Anzeige
+### 5.4 Clipping display
 
-- Vor dem Limiter wird der Sample-Peak gemessen.
-- Zustände:
+- The sample peak is measured before the limiter.
+- Conditions:
   - **OK:** Peak ≤ −6 dBFS.
-  - **Gelb „Limiter“:** Limiter greift > 0,5 dB ein.
-  - **Rot „Clip“:** Eingangspeak vor dem Limiter > 0 dBFS oder
-    Limiter-Gain > 3 dB.
-- Anzeige am Volume-Slider der Player-Seite; Hysterese gegen Flackern.
-- Die App verstellt die Lautstärke **nicht** automatisch. Optionaler
-  Ein-Tap-Vorschlag „−2 dB“ wie in der Watch-Referenz.
+  - **Yellow “Limiter”:** Limiter intervenes > 0.5 dB.
+  - **Red “Clip”:** Input peak before the limiter > 0 dBFS or
+    Limiter gain > 3 dB.
+- Display on the volume slider of the player page; Anti-flicker hysteresis.
+- The app **does not** adjust the volume automatically. More optional
+  One-tap suggestion “−2 dB” as in the Watch reference.
 
-### 5.5 Media3-Anbindung
+### 5.5 Media3 connection
 
-- `MediaSessionService` besitzt den `ExoPlayer`.
-- `DefaultAudioSink.Builder(context).setAudioProcessorChain(...)` mit einem
-  `BaseAudioProcessor` für den EQ.
-- `@OptIn(UnstableApi::class)` nur an der Media3-Grenze.
-- Der Audio-Thread liest einen **unveränderlichen Snapshot** aus
-  `@Volatile`-Feldern; keine DataStore-, Mutex- oder UI-Zugriffe im
-  Audio-Callback.
-- Ein fester Arbeitspuffer; keine Objekt-Allokation pro Puffer.
-- Bei fehlender DSP-Unterstützung oder exotischem Decoder fällt die App auf
-  unveränderte Wiedergabe zurück, nicht auf einen Absturz.
+- `MediaSessionService` owns `ExoPlayer`.
+- `DefaultAudioSink.Builder(context).setAudioProcessorChain(...)` with a
+  `BaseAudioProcessor` for the EQ.
+- `@OptIn(UnstableApi::class)` only on the Media3 boundary.
+- The audio thread reads an **immutable snapshot**
+  `@Volatile` fields; no DataStore, mutex or UI accesses in
+  Audio callback.
+- A fixed working buffer; no object allocation per buffer.
+- If there is no DSP support or an exotic decoder, the app continues unchanged playback
+  unchanged playback, not a crash.
 
-### 5.6 Formate
+### 5.6 Formats
 
-Priorität: **MP3**. Unterstützt werden darüber hinaus:
+Priority: **MP3**. The following are also supported:
 
 - `.mp3`
 - `.m4a`, `.aac`
@@ -439,79 +434,78 @@ Priorität: **MP3**. Unterstützt werden darüber hinaus:
 - `.flac`
 - `.wav`
 
-Die Auswahl erfolgt über Dateiendung **und** MIME-Typ, um Systemdateien und
-Videos zu vermeiden. Codec-Fehler einzelner Dateien werden pro Titel gemeldet
-und übersprungen; die Wiedergabe bleibt stehen.
+The selection is made via file extension **and** MIME type to system files and
+Videos to avoid. Individual file codec errors are reported per title
+and skipped over; playback stops.
 
 ---
 
-## 6. Bibliothek, Ordner und Titel
+## 6. Library, folders and titles
 
-### 6.1 SAF statt breiter Medienberechtigung
+### 6.1 SAF instead of broad media authorization
 
-Der Nutzer wählt den Musik-Root über `ACTION_OPEN_DOCUMENT_TREE`. Die App
-speichert die URI und ruft `takePersistableUriPermission(..., READ)` auf.
-Damit gilt:
+The user chooses the music root via `ACTION_OPEN_DOCUMENT_TREE`. The app
+saves the URI and calls `takePersistableUriPermission(..., READ)`.
+This means:
 
-- Kein `READ_MEDIA_AUDIO`, kein `MANAGE_EXTERNAL_STORAGE`.
-- Der Nutzer entscheidet selbst, welcher Ordner freigegeben wird.
-- Die Freigabe überlebt Neustarts, solange der Nutzer sie nicht entzieht.
-- Android 17-konform; keine Sonderbehandlung für Android 13+ nötig.
+- No `READ_MEDIA_AUDIO`, no `MANAGE_EXTERNAL_STORAGE`.
+- The user decides which folder is shared.
+- The permission survives restarts as long as the user does not revoke it.
+- Android 17 compliant; no special treatment necessary for Android 13+.
 
-Beim App-Start und bei jeder Nutzung wird geprüft:
+When the app starts and every time it is used, the following is checked:
 
-1. Ist eine Root-URI gespeichert?
-2. Ist dafür noch eine persistierbare Leseberechtigung vorhanden?
-3. Existiert das Verzeichnis noch?
+1. Is a root URI stored?
+2. Is there still a persistable read permission for this?
+3. Does the directory still exist?
 
-Wenn nicht: unaufdringlicher Hinweis mit „Ordner wählen“, kein Absturz und
-kein leerer Player ohne Erklärung.
+If not: unobtrusive message with “Select folder”, no crash and
+no empty player without explanation.
 
-### 6.2 Das geforderte flache Ordner-Modell
+### 6.2 The required flat folder model
 
-Auswahlpunkte im Player und auf der Sync-Seite:
+Selection points in the player and on the sync page:
 
 ```
-Musik-Root/                     ← auswählbar, enthält rekursiv alles
-├── Album A/                    ← auswählbar, enthält rekursiv alles
-│   ├── 01 - Titel.mp3
-│   └── CD 2/                   ← NICHT auswählbar
-│       └── 02 - Titel.mp3      ← zählt zu Album A
-├── Album B/                    ← auswählbar
-└── locker.mp3                  ← zählt zum Musik-Root
+Music root/                     ← selectable, contains everything recursively
+├── Album A/                    ← selectable, contains everything recursively
+│   ├── 01 - Title.mp3
+│   └── CD 2/                   ← NOT selectable
+│       └── 02 - Title.mp3      ← belongs to Album A
+├── Album B/                    ← selectable
+└── locker.mp3                  ← belongs to the music root
 ```
 
-- **Root** und **jeder direkte Unterordner** sind Navigationspunkte.
-- Tiefere Unterordner sind keine eigenen Punkte.
-- Die Dateien eines Punktes werden **rekursiv** eingesammelt.
-- Dateien direkt im Root gehören zum Root-Punkt.
-- Leere Ordner erscheinen nicht als eigener Eintrag, wenn sie keine Titel im
-  Teilbaum haben; der Punkt bleibt aber erreichbar, solange er direkt unter
-  dem Root liegt.
+- **Root** and **any direct subfolder** are navigation points.
+- Deeper subfolders are not separate points.
+- The files of a point are collected **recursively**.
+- Files directly in the root belong to the root point.- Empty folders do not appear as a separate entry if there are no titles in them
+  have subtree; However, the point remains accessible as long as it is directly below
+  the root lies.
 
-### 6.3 Scanner
+### 6.3 Scanners
 
-- `DocumentsContract.buildChildDocumentsUriUsingTree(...)` mit
-  `ContentResolver.query`, nicht `DocumentFile` pro Datei: weniger
-  Objekt-Allokation und weniger Roundtrips.
-- Traversierung im Hintergrund (`Dispatchers.IO`, cancellable).
-- Ein Scan erzeugt einen unveränderlichen `LibrarySnapshot` im RAM.
-- Kein Neu-Scannen bei jeder UI-Animation; nur bei Start, nach Ordnerwechsel,
-  nach Sync und auf „Neu laden“.
-- Limits gegen Fehlerbäume: maximale Tiefe 8, maximal 5 000 Dateien,
-  500 Root-Knoten. Überschreitung wird geloggt und in der UI erklärt.
-- Versteckte Ordner (`.name`) werden übersprungen.
-- Sortierung: natürliche Namensreihenfolge; führende Nummern
-  (`01 - ...`) werden als Sortierindex erkannt.
-- Anzeige: ID3/MediaStore-Titel, sonst Dateiname ohne Endung.
+- `DocumentsContract.buildChildDocumentsUriUsingTree(...)` with
+  `ContentResolver.query`, not `DocumentFile` per file: less
+  Object allocation and fewer round trips.
+- Traversal in the background (`Dispatchers.IO`, cancelable).
+- A scan creates an immutable `LibrarySnapshot` in RAM.
+- No rescanning on every UI animation; only at startup, after changing folders,
+  after Sync and click “Reload”.
+- Limits against fault trees: maximum depth 8, maximum 5 000 files,
+  500 root nodes. Exceedance is logged and explained in the UI.
+- Hidden folders (`.name`) are skipped.
+- Sorting: natural name order; leading numbers
+  (`01 - ...`) are recognized as a sorting index.
+- Display: ID3/MediaStore title, otherwise file name without extension.
 
-### 6.4 Titel-Daten
+### 6.4 Title data
 
 ```kotlin
 data class Track(
   val uri: Uri,
   val documentId: String,
-  val displayName: String,   // Dateiname ohne Endung
+  val displayName: String,   // filename without extension
   val title: String,         // Metadaten oder Dateiname
   val artist: String?,
   val album: String?,
@@ -521,165 +515,162 @@ data class Track(
 )
 ```
 
-- Metadaten werden **lazy** beim aktuellen/benachbarten Titel geladen
-  (`MediaMetadataRetriever`), nicht für alle 5 000 Dateien beim Scan.
-- Ein kleiner LRU-Cache hält die letzten Titel.
-- `MediaMetadataRetriever` wird immer geschlossen; Fehler führen zu
-  Dateiname als Fallback.
+- Metadata is loaded **lazy** for the current/adjacent title
+  (`MediaMetadataRetriever`), not for all 5 000 files during scanning.
+- A small LRU cache holds the last tracks.
+- `MediaMetadataRetriever` is always closed; Errors lead to
+  Filename as a fallback.
 
-### 6.5 Navigation im Player
+### 6.5 Navigation in the player
 
-- Eine Zeile mit „Ordner“ und Pfeilen links/rechts.
-- Eine Zeile mit „Titel“ und Pfeilen links/rechts.
-- Ein Tipp auf den Ordnernamen öffnet ein Bottom-Sheet mit allen
-  auswählbaren Knoten; das ist die barrierefreie Alternative zu vielen
-  Pfeiltipps.
-- Titel springen zyklisch; der aktuelle Titel wird beim Wechsel gestoppt und
-  neu gestartet (oder bleibt gestoppt, wenn vorher gestoppt).
-- Bei „Play“ startet der aktuelle Titel; bei „Stop“ wird angehalten.
-- Auto-Advance: standardmäßig an, damit ein Retraining nicht nach drei
-  Minuten endet; in den Einstellungen abschaltbar.
-- Kein Such-Slider, kein Vorspulen — wie in der Watch-Referenz und den
+- A line with “folder” and arrows left/right.
+- A line with “title” and arrows left/right.
+- A tap on the folder name opens a bottom sheet with all of them
+  selectable nodes; this is the barrier-free alternative to many
+  Arrow tips.
+- Titles jump cyclically; the current title is stopped when changing and
+  restarted (or remains stopped if previously stopped).
+- With “Play” the current title starts; “Stop” stops.
+- Auto-Advance: on by default to prevent retraining after three
+  minutes ends; Can be switched off in the settings.
+- No search slider, no fast forward — like in the Watch Reference and the
   Mockups.
 
 ---
 
-## 7. Wiedergabe, Bluetooth und Hintergrund
+## 7. Playback, Bluetooth and background
 
-### 7.1 Dienst
+### 7.1 Service
 
-- `MediaSessionService` mit `MediaSession` und `ExoPlayer`.
+- `MediaSessionService` with `MediaSession` and `ExoPlayer`.
 - `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_MEDIA_PLAYBACK`.
-- Notification mit Cover, Titel, Künstler und Transportaktionen.
-- `setHandleAudioBecomingNoisy(true)`: Stecker ziehen/Headset trennen pausiert.
-- Audio-Fokus wird von Media3 verwaltet; kein eigener zweiter Fokus.
-- `WAKE_LOCK` nur, wenn Media3 ihn tatsächlich für die Wiedergabe benötigt.
-- Bei Kopfhörer-Disconnect bleibt die App pausiert; kein automatisches
-  Weiterdudeln über den Lautsprecher (Tinnitus-Kontext).
+- Notification with cover, title, artist and transport actions.
+- `setHandleAudioBecomingNoisy(true)`: Unplug/disconnect headset paused.
+- Audio Focus is managed by Media3; no separate second focus.
+- `WAKE_LOCK` only if Media3 actually needs it for playback.
+- If the headphones are disconnected, the app remains paused; no automatic
+  Continue playing through the loudspeaker (tinnitus context).
 
 ### 7.2 Bluetooth
 
-- Die App nutzt die Standard-Audiospur; A2DP, Codec und Latenz liegen beim
-  System. Das ist Absicht: kein eigenes SCO/HFP, keine Codec-Manipulation.
+- The app uses the default audio track; A2DP, codec and latency are at
+  system. This is intentional: no own SCO/HFP, no codec manipulation.
 - `AudioAttributes.USAGE_MEDIA` + `CONTENT_TYPE_MUSIC`.
-- Das System merkt sich die Lautstärke pro Bluetooth-Gerät; die App-Regel
-  wirkt davor im DSP-Pfad.
-- Empfohlene Bedienung in der UI: Systemlautstärke eher hoch lassen und
-  mit dem App-Regler fein regeln. Ein Hinweis in Setup, kein Zwang.
-- Headset-Tasten (Play/Pause, Next/Previous) laufen über die MediaSession.
-- Der Emulator kann keine echte A2DP-Strecke prüfen; dafür ist später ein
-  echtes Pixel 10 mit Kopfhörern vorgesehen.
+- The system remembers the volume per Bluetooth device; the app rule
+  acts beforehand in the DSP path.
+- Recommended operation in the UI: Leave the system volume rather high and
+  fine-tune with the app controller. A note in setup, not a requirement.
+- Headset buttons (Play/Pause, Next/Previous) run via the MediaSession.
+- The emulator cannot check a real A2DP route; that's for later
+  real Pixel 10 with headphones provided.
 
-### 7.3 Stabilität
+### 7.3 Stability
 
-- Lokale Dateien: `LoadControl` so eingestellt, dass kurze I/O-Spitzen
-  gepuffert werden, ohne den Akku zu melden.
-- Bei `Player.Listener.onPlayerError`: verständliche Meldung, nächster Titel
-  nur nach Nutzerentscheidung oder bei Auto-Advance mit Überspringen.
-- Kein Netzwerk im Wiedergabepfad; Cover laden asynchron und abbrechbar.
-- Ein 10-Minuten-Dauerlauf im Emulator ist Teil der Abnahme.
+- Local files: `LoadControl` set to allow short I/O peaks
+  can be buffered without reporting the battery.
+- For `Player.Listener.onPlayerError`: understandable message, next trackonly by user decision or with auto-advance with skipping.
+- No network in playback path; Load covers asynchronously and can be canceled.
+- A 10-minute endurance run in the emulator is part of the acceptance test.
 
 ---
 
-## 8. Oberfläche und Bedienführung
+## 8. Interface and user guidance
 
-Gestaltung aus den Mockups: schwarzer Hintergrund, kräftiges Blau, große
-Pill-Buttons, weiße Typografie. Das ist gleichzeitig OLED-freundlich und für
-Laien gut lesbar.
+Design from the mockups: black background, strong blue, large
+Pill buttons, white typography. This is at the same time OLED friendly and for
+Easy to read for laypeople.
 
 ### 8.1 Navigation
 
-Oben ein dreiteiliger Tab: **PLAYER · EQ · SETUP**.
-Die Synchronize-Seite ist ein Unterziel von Setup und trägt oben einen
-Zurück-Pfeil. Die Tabs bleiben sichtbar; das ist konsistent mit den Mockups.
+At the top there is a three-part tab: **PLAYER · EQ · SETUP**.
+The Synchronize page is a sub-goal of Setup and has one at the top
+Back arrow. The tabs remain visible; this is consistent with the mockups.
 
-### 8.2 Player
+### 8.2 Players
 
-| Element | Verhalten |
+| Element | behavior |
 |---|---|
-| Tabs | Player / EQ / Setup |
-| Ordnerzeile | Name des gewählten Punktes; Pfeile wechseln; Tipp öffnet Auswahl |
-| Cover | quadratisch, eingebettetes oder Online-Cover, sonst Platzhalter |
-| Play/Stop | großes rundes Ziel, Haptik, Content-Description |
-| Titelzeile | Titel, Künstler/Dateiname; Pfeile wechseln Titel |
-| Volume | Slider 0–100 %, Anzeige in %, zusätzlich dB im EQ-Kontext |
-| Clip-Badge | „Limiter“ gelb / „Clip“ rot, nur wenn relevant |
-| EQ BYPASS | Umschalter; Default aktiv (Filter aus) |
-| Preset | Dropdown unten rechts: Preset 1/2/3, wirkt sofort |
+| Tabs | Player/EQ/Setup |
+| Folder line | name of the selected point; change arrows; Tip opens selection |
+| Cover | square, embedded or online cover, otherwise placeholder |
+| Play/Stop | large round target, feel, content description |
+| Title line | Title, Artist/Filename; Arrows change title |
+| Volume | Slider 0–100%, display in %, additional dB in the EQ context |
+| Clip badge | “Limiter” yellow / “Clip” red, only if relevant |
+| EQ BYPASS | switch; Default active (filter off) |
+| Presets | Dropdown at the bottom right: Preset 1/2/3, takes effect immediately |
 
-Der Slider steuert den App-Gain. Die Systemlautstärke bleibt unberührt und
-ist über die Systemtasten zusätzlich verfügbar.
+The slider controls the app gain. The system volume remains unaffected and
+is also available via the system keys.
 
 ### 8.3 EQ
 
-- Drei Preset-Pills: **PRESET 1 / 2 / 3**.
-- Sechs Band-Chips:
-  - **blauer Rahmen** = aktuell ausgewählt
-  - **grün** = aktiv (`enabled = true`)
-  - **grau/orange** = aus
-- Ein Tipp auf einen Chip selektiert ihn und zeigt die Felder.
-- Ein Schalter „Filter aktiv“ im Editor entspricht klanglich `enabled`;
-  die Chips reflektieren den Zustand.
-- Felder des gewählten Chips:
-  - **Type/OFF:** Dropdown mit allen sieben Typen.
-  - **Freq:** Hz, Tastatur, Bereichsanzeige.
-  - **Q:** dimensionslos, Erklärung „breiter/ schmaler“.
-  - **Filter Gain:** dB, nur bei Peak/Shelf wirksam.
-  - **Volume:** dB, Preamp des **Presets**; im Bypass ohne Wirkung.
-- Unten: „Preset zurücksetzen“, „Von Preset kopieren“ und Live-Hinweis
-  „dieses Band ist aus / außerhalb des hörbaren Bereichs“.
-- Die Felder akzeptieren Komma und Punkt. Nach Verlassen des Feldes wird
-  formatiert und validiert; während der Eingabe bleibt der Text erhalten.
-- Die sechs Bänder sind immer sichtbar, auch bei `OFF`.
+- Three preset pills: **PRESET 1 / 2 / 3**.
+- Six band chips:
+  - **blue frame** = currently selected
+  - **green** = active (`enabled = true`)
+  - **gray/orange** = off
+- A tap on a chip selects it and shows the fields.
+- A “Filter active” switch in the editor sounds like “enabled”;
+  the chips reflect the condition.
+- Fields of the selected chip:
+  - **Type/OFF:** Dropdown with all seven types.
+  - **Freq:** Hz, keyboard, range display.
+  - **Q:** dimensionless, explanation “wider/narrower”.
+  - **Filter Gain:** dB, only effective for peak/shelf.
+  - **Volume:** dB, preamp of the **preset**; in bypass without effect.
+- Bottom: “Reset Preset”, “Copy from Preset” and Live Notice
+  “this band is out/out of the audible range”.
+- The fields accept comma and period. After leaving the field
+  formatted and validated; The text remains as you type.
+- The six bands are always visible, even when `OFF`.
 
 ### 8.4 Setup
 
-| Element | Verhalten |
+| Element | behavior |
 |---|---|
-| Send to Watch | öffnet Synchronize |
-| Select Root Folder | SAF-Picker |
-| Root Folder Path | lesbarer Pfad; bei fehlendem Zugriff rot mit Aktion |
-| Play Sine Wave | Start/Stop des Testtons |
-| Freq | Slider in 10-Hz-Schritten, Anzeige in Hz |
-| + / − | 1-Hz-Schritte, mit langem Druck zehn Schritte |
-| Volume | Testlautstärke in %, mit Warnhinweis |
-| Musik neu einlesen | optionaler Rescan |
-| Diagnose | Version, letzter Scan, Sync-Status, Audio-Route |
+| Send to Watch | opens Synchronize |
+| Select Root Folder | SAF picker |
+| Root Folder Path | readable path; If access is missing, red with action |
+| Play Sine Wave | Start/Stop the test tone |
+| Freq | Slider in 10 Hz steps, display in Hz |
+| + / − | 1 Hz steps, with a long press ten steps |
+| Volume | Test volume in %, with warning |
+| Reread music | optional rescan |
+| Diagnosis | Version, last scan, sync status, audio route |
 
 ### 8.5 Synchronize
 
-- Kopfzeile „Synchronize EQ Presets and Music to Watch“.
-- Liste:
-  - Root mit Anzahl/geschätzter Größe
-  - jede direkte Unterebene
-- Checkboxen; „Alle auswählen/abwählen“; ausgewählte Titel werden
-  dedupliziert.
-- Zwei große Buttons: **SYNC EQs** und **SYNC MUSIC**.
-- Fortschrittsanzeige mit Datei/Preset, Prozent, Abbrechen.
-- Deutliches Banner: **„Mock – Uhr-App wird später separat angepasst“**.
-- Nach Abschluss: Zeitstempel und „zuletzt synchronisiert“.
-- Fehlerzustände: abgebrochen, Watch nicht erreichbar, Datei nicht lesbar;
-  jeweils mit verständlichem Text und Wiederholen.
+- Header “Synchronize EQ Presets and Music to Watch”.
+- List:
+  - Root with count/estimated size
+  - any direct sublevel
+- checkboxes; “Select/Deselect All”; selected titles will be
+  deduplicated.
+- Two large buttons: **SYNC EQs** and **SYNC MUSIC**.
+- Progress display with file/preset, percent, cancel.
+- Clear banner: **“Mock – Watch app will be customized separately later”**.
+- After completion: timestamp and “last synced”.
+- Error states: aborted, watch not accessible, file not readable;
+  each with understandable text and repetition.### 8.6 Usability for technically uninformed users
 
-### 8.6 Bedienbarkeit für technisch unaffine Nutzer
-
-- Deutsche Beschriftungen, keine englischen Fachbegriffe im Hauptfluss.
-- Große Touch-Ziele (min. 48 dp), ausreichender Kontrast.
-- Frequenz/Q/Gain mit Einheiten und Klartext-Hilfe; EQ bleibt „Expertenseite“.
-- Default: EQ aus, Lautstärke 0 dB, Auto-Advance an.
-- Keine blockierenden Dialoge beim Start; Rechte werden am Ort der Nutzung
-  erklärt.
-- Fehler immer mit einer Aktion: „Ordner wählen“, „Erneut versuchen“,
-  „Systemlautstärke prüfen“.
-- Screenreader: Content-Descriptions, Rollen, Statusansagen.
-- Keine reine Farbinformation: aus/ausgewählt/aktiv zusätzlich durch Icon
-  und Text.
+- German labels, no English technical terms in the main flow.
+- Large touch targets (min. 48 dp), sufficient contrast.
+- Frequency/Q/Gain with units and plain text help; EQ remains an “expert site”.
+- Default: EQ off, volume 0 dB, auto advance on.
+- No blocking dialogs at startup; Rights are assigned at the place of use
+  explained.
+- Error always with an action: “Select folder”, “Try again”,
+  “Check system volume”.
+- Screen reader: content descriptions, roles, status announcements.
+- No pure color information: off/selected/active additionally via icon
+  and text.
 
 ---
 
-## 9. Berechtigungen (Android 17 / API 37)
+## 9. Permissions (Android 17 / API 37)
 
-### 9.1 Manifest
+### 9.1 Manifesto
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
@@ -688,42 +679,42 @@ ist über die Systemtasten zusätzlich verfügbar.
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 <uses-permission android:name="android.permission.WAKE_LOCK" />
-<!-- Falls für Watch/Headset-APIs nötig; nicht für Data Layer allein -->
+<!-- Only needed for watch/headset APIs; not for Data Layer alone -->
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 ```
 
-- **Kein** `READ_MEDIA_AUDIO`, **kein** `MANAGE_EXTERNAL_STORAGE`,
-  **kein** breiter Speicherzugriff.
-- `.mp3` etc. werden nicht als Intent-Filter beansprucht; die App ist keine
-  allgemeine Datei-App.
-- `MediaSessionService` mit `foregroundServiceType="mediaPlayback"`.
+- **No** `READ_MEDIA_AUDIO`, **no** `MANAGE_EXTERNAL_STORAGE`,
+  **no** wide memory access.
+- `.mp3` etc. are not claimed as intent filters; the app is not
+  general file app.
+- `MediaSessionService` with `foregroundServiceType="mediaPlayback"`.
 
-### 9.2 Laufzeitprüfung
+### 9.2 Runtime check
 
-| Berechtigung | Wann | Verhalten bei Ablehnung |
+| Permission | When | Behavior in case of rejection |
 |---|---|---|
-| SAF-Ordnerzugriff | Start + bei jeder Bibliotheksnutzung | Banner, App bleibt bedienbar, kein leerer Player ohne Erklärung |
-| `POST_NOTIFICATIONS` | Beim ersten Play | Wiedergabe läuft, aber Hinweis auf fehlende Medien-Notification |
-| `BLUETOOTH_CONNECT` | Nur wenn eine Watch-/Headset-API sie wirklich braucht | Sync/Status mit klarer Fehlermeldung; Kern-App bleibt nutzbar |
-| Netzwerk | Cover-Abfrage | Platzhalter, keine Fehlermeldung im Hauptfluss |
+| SAF Folder Access | Start + every time you use the library | Banner, app remains usable, no empty player without explanation |
+| `POST_NOTIFICATIONS` | On the first play | Playback is running, but there is no media notification |
+| `BLUETOOTH_CONNECT` | Only when a watch/headset API really needs it | Sync/Status with clear error message; Core app remains usable |
+| Network | Cover query | Wildcard, no error message in main flow |
 
-Regeln:
+Rules:
 
-1. **Erst prüfen, dann anfordern, dann erst degradieren.**
-2. Nie beim App-Start alle Rechte in einem Schwall erfragen.
-3. Jede Ablehnung erklärt, was ohne das Recht fehlt.
-4. Wenn der Nutzer den Ordnerzugriff entzieht, wird die Bibliothek als
-   „nicht verfügbar“ markiert, nicht als leer.
-5. Android-17-Eigenheiten: Edge-to-Edge mit `WindowInsets`, Predictive Back
-   aktivieren, Notification-Kanal bei API 33+ anlegen.
-6. Ein laufender Service darf durch eine späte Rechteentscheidung nicht
-   abstürzen; im Zweifel pausieren und den Nutzer zurückholen.
+1. **First check, then request, then demote.**
+2. Never ask for all rights in one go when starting the app.
+3. Every rejection explains what is missing without the right.
+4. If the user revokes folder access, the library will be saved as
+   Marked as “not available”, not empty.
+5. Android 17 peculiarities: Edge-to-edge with `WindowInsets`, Predictive Back
+   Activate, create notification channel for API 33+.
+6. An ongoing service may not be permitted due to a late rights decision
+   crash; If in doubt, pause and bring the user back.
 
 ---
 
-## 10. Synchronisation und API
+## 10. Synchronization and API
 
-### 10.1 Jetzt: Transport-Schnittstelle + Mock
+### 10.1 Now: Transport interface + mock
 
 ```kotlin
 interface SyncTransport {
@@ -734,31 +725,31 @@ interface SyncTransport {
 }
 ```
 
-- `MockSyncTransport` simuliert pro Datei/Preset 50–300 ms, meldet
-  Fortschritt und kann abbrechen. Es werden keine echten Daten geschrieben.
-- Die UI zeigt den Mock-Status klar an. So ist die Bedienung schon jetzt
-  vollständig testbar, ohne die spätere API zu erfinden.
-- Die echte Implementierung wird später hinter dieselbe Schnittstelle gehängt,
-  sobald die Uhr-App separat auf das v3-Protokoll angepasst ist. Das Uhr-Projekt
-  wird in diesem Vorhaben nicht verändert.
+- `MockSyncTransport` simulates 50-300 ms per file/preset, reports
+  Progress and can cancel. No real data is written.
+- UI clearly displays mock status. This is how it works now
+  fully testable without inventing the later API.
+- The real implementation will be added later behind the same interface,
+  as soon as the watch app is separately adapted to the v3 protocol. The Watch Project
+  will not be changed in this project.
 
-### 10.2 Referenzprotokoll der vorhandenen Wear-App
+### 10.2 Reference log of the existing Wear app
 
-Die Wear-App `de.notchedmusic.watch` verwendet bereits:
+The Wear app `de.notchedmusic.watch` already uses:
 
-| Zweck | Pfad / Schlüssel |
+| Purpose | Path/Key |
 |---|---|
-| Fähigkeit | `de.notchedmusic.watch.filter_profiles` |
-| Profile senden | `/filter/profiles`, `profiles_json` |
-| Profile anfordern | `/filter/request` (leer) |
-| Musik senden | `/music/upload`, `audio` (Asset), `album`, `file_name` |
+| ability | `de.notchedmusic.watch.filter_profiles` |
+| Send profiles | `/filter/profiles`, `profiles_json` |
+| Request profiles | `/filter/request` (empty) |
+| Send music | `/music/upload`, `audio` (asset), `album`, `file_name` |
 
-Dieses Protokoll ist **nur eine Referenz** aus dem bestehenden Uhr-Projekt und
-wird hier nicht verändert. Es hat zwei Presets (A/B), während die Phone-App
-verbindlich drei Presets verwaltet. Die Angleichung ist ein späterer,
-separater Auftrag am Uhr-Projekt.
+This log is **just a reference** from the existing watch project and
+is not changed here. It has two presets (A/B), while the phone app
+Manages three binding presets. The adjustment is a later,
+separate order on the watch project.
 
-### 10.3 Neues DTO „v3“ (Vorschlag, noch nicht festgeschrieben)
+### 10.3 New DTO “v3” (proposal, not yet committed)
 
 ```json
 {
@@ -783,209 +774,206 @@ separater Auftrag am Uhr-Projekt.
 }
 ```
 
-- `version` erlaubt spätere Erweiterungen.
-- Unbekannte Felder werden ignoriert, nie geworfen.
-- Maximal drei Presets, je sechs Bänder; das Gegenstück validiert erneut.
-- `playerVolumeDb` und Systemlautstärke werden **nicht** mitgesendet.
-- Ein Preset ist immer ein vollständiges Klangrezept; die Uhr soll nicht
-  raten müssen, welche Bänder fehlen.
+- `version` allows later extensions.- Unknown fields are ignored, never thrown.
+- Maximum of three presets, six bands each; the counterpart revalidates.
+- `playerVolumeDb` and system volume are **not** sent.
+- A preset is always a complete sound recipe; the watch shouldn't
+  have to guess which bands are missing.
 
-**Kompatibilitätsentscheidung (festgelegt):** Die Phone-App arbeitet immer mit
-drei Presets und sendet im echten Sync ausschließlich das v3-Paket mit allen
-drei Presets. Die vorhandene Uhr-App kann v3 noch nicht lesen; sie wird dafür
-später **außerhalb dieses Projekts** angepasst. Bis dahin:
+**Compatibility decision (determined):** The phone app always works
+three presets and in real sync only sends the v3 package with all of them
+three presets. The existing watch app can't read v3 yet; it will for it
+later adapted **outside of this project**. Until then:
 
-- Es gibt **kein** stilles Herunterrechnen auf `slotA`/`slotB` und keinen
-  Datenverlust von Preset 3.
-- Der echte Watch-Sync bleibt deaktiviert bzw. meldet klar
-  „Uhr-App muss noch angepasst werden“.
-- Der Mock-Transport zeigt und simuliert trotzdem alle drei Presets, damit
-  die Phone-Oberfläche und das Datenmodell vollständig geprüft werden können.
-- Das bestehende Uhr-Projekt wird weder verändert noch als Build-Abhängigkeit
-  eingebunden. Es dient nur als Nachschlagewerk für DSP- und Pfadkonventionen.
+- There is **no** silent downsampling to `slotA`/`slotB` and none
+  Data loss from Preset 3.
+- The real watch sync remains deactivated or reports clearly
+  “Watch app still needs to be adjusted”.
+- The mock transport still shows and simulates all three presets, so
+  the phone interface and the data model can be fully checked.
+- The existing watch project is neither changed nor made a build dependency
+  integrated. It is intended only as a reference for DSP and path conventions.
 
-Die Anpassung der Uhr (drei Slots statt A/B, v3-Empfänger, Tests) ist ein
-separater Folgeauftrag und nicht Teil dieses Phone-Projekts.
+The adjustment of the watch (three slots instead of A/B, v3 receiver, tests) is a
+separate follow-up order and not part of this phone project.
 
-### 10.4 Musik-Sync
+### 10.4 Music Sync
 
-- Pro Datei ein Data-Layer-Item mit Asset, Albumname und Dateiname.
-- Der bestehende Uhr-Empfänger legt atomar über `.part` ab. Dieses Verhalten
-  wird nur referenziert; das Uhr-Projekt wird nicht verändert.
-- Vor dem Senden: Existenz, Lesbarkeit, Größe und Endung prüfen.
-- Fortschritt: „3 / 12 Dateien · 4,2 MB von 9,1 MB“.
-- Doppelte Auswahl wird über die Track-URI dedupliziert.
-- Abbrechen lässt bereits übertragene Dateien liegen; die Uhr ignoriert
-  halbe `.part`-Dateien.
-- Große Dateien: Chunking/Resume ist ein späterer Ausbau; für den ersten
-  Wurf reicht ein Asset pro Datei. Die Grenzen des Data Layer werden vor der
-  echten Implementierung gemessen.
+- One data layer item per file with asset, album name and file name.
+- The existing watch receiver stores atomically via `.part`. This behavior
+  is only referenced; the watch project is not changed.
+- Before sending: Check existence, readability, size and ending.
+- Progress: “3 / 12 files · 4.2 MB from 9.1 MB”.
+- Duplicate selection is deduplicated via track URI.
+- Cancel leaves files that have already been transferred; ignored the watch
+  half `.part` files.
+- Large files: Chunking/Resume is a later development; for the first
+  One asset per file is enough. The boundaries of the data layer are shown in front of the
+  real implementation measured.
 
-### 10.5 Robustheit der API
+### 10.5 API robustness
 
-- Jede eingehende Nachricht wird größenbegrenzt (Presets < 8 KiB Text).
-- Ungültiges JSON wird geloggt und verworfen, nie als Exception nach oben.
-- Pfade werden entschärft (`..`, `/`, `\`), wie im bestehenden Empfänger.
-- Die Phone-App fordert Profile an (`/filter/request`), damit die Uhr nach
-  einem Sync sofort den neuen Stand hat.
-- Zeitstempel `lastSyncMs` und eine kurze Statuszeile im Setup.
-- Idempotenz: erneutes Senden desselben Presets ändert nichts anderes als
-  den Zeitstempel.
-
----
-
-## 11. Album-Cover
-
-Reihenfolge:
-
-1. **Eingebettetes Cover** aus den Datei-Metadaten
-   (`MediaMetadataRetriever.embeddedPicture`). Das ist schnell, offline
-   verfügbar und deckt die meisten MP3s mit ID3v2-APIC ab.
-2. **Lokaler Cache** (Coil-Disk-Cache, Schlüssel aus Titel/Album/Künstler
-   normalisiert).
-3. **Online-Fallback** nur, wenn kein eingebettetes Cover vorhanden ist.
-   Primär MusicBrainz + Cover Art Archive (kein API-Key, aber User-Agent und
-   Rate-Limit nötig), sekundär iTunes Search API als Ausweichweg.
-4. **Platzhalter** bei Timeout, Offline oder keinem Treffer.
-
-Regeln:
-
-- Kein Netzwerkaufruf im Audio- oder UI-Thread.
-- Anfrage-Timeout 5 s; maximal 1 Anfrage/s; Ergebnis wird gecacht.
-- Nur Titel/Künstler/Album werden gesendet, keine Dateipfade, keine
-  Hörhistorie.
-- Cover-Laden ist abbrechbar, wenn der Titel wechselt.
-- Nur für unterstützte Musikdateien, nicht für beliebige Dateien.
-- Bei deaktiviertem Netzwerk bleibt die App vollständig nutzbar.
-- Cover-Größe auf die Anzeige begrenzen (z. B. 512 px), nicht Originalbilder
-  im Speicher halten.
+- Each incoming message is limited in size (presets < 8 KiB text).
+- Invalid JSON is logged and discarded, never raised as an exception.
+- Paths are defused (`..`, `/`, `\`), as in the existing receiver.
+- The Phone app requests profiles (`/filter/request`) so that the watch can follow
+  a sync immediately has the new status.
+- Timestamp `lastSyncMs` and a short status line in the setup.
+- Idempotence: resending the same preset does nothing other than change
+  the timestamp.
 
 ---
 
-## 12. Persistenz und Zustand
+## 11. Album cover
 
-- **DataStore Preferences** für die kleinen Einstellungen:
-  - Root-URI
-  - drei Presets als JSON
-  - aktives Preset
-  - EQ-Bypass
-  - Player-Volume
-  - Repeat/Auto-Advance
-  - Sinusfrequenz/-lautstärke
-  - letzter Sync
-- **Ein** JSON-Eintrag für alle Presets, damit kein halb geschriebener Satz
-  aus drei verschiedenen Ständen entsteht.
-- Schreiben über einen **konflatierten Kanal**: schnelle Reglerbewegungen
-  erzeugen nur den letzten Stand; ein älterer Schreiber überschreibt nie
-  einen neueren.
-- Ein `StateFlow<AppSettings>` ist die Quelle der Wahrheit für die UI.
-- Der Audio-Thread liest nur einen unveränderlichen Snapshot; DataStore-I/O
-  findet nie dort statt.
-- Fehlerhafte oder unbekannte JSON-Stände fallen auf Defaults zurück und
-  werden geloggt, statt die App zu blockieren.
-- Formatversion im JSON, damit spätere Migrationen möglich sind.
-- Optional: Export/Import aller Presets als Datei ist ein späteres
-  Nice-to-have, kein Startumfang.
+Order:
+
+1. **Embedded Cover** from the file metadata
+   (`MediaMetadataRetriever.embeddedPicture`). This is fast, offline
+   available and covers most MP3s with ID3v2 APIC.
+2. **Local Cache** (coil disk cache, key from title/album/artist
+   normalized).
+3. **Online fallback** only if there is no embedded cover.
+   Primary MusicBrainz + Cover Art Archive (no API key, but user agent and
+   Rate limit necessary), secondarily iTunes Search API as an alternative option.
+4. **Wildcard** for timeout, offline or no hit.
+
+Rules:
+
+- No network call in audio or UI thread.
+- Request timeout 5 s; maximum 1 request/s; Result is cached.
+- Only track/artist/album will be sent, no file paths, none
+  Listening history.
+- Cover loading can be canceled when the title changes.
+- Only for supported music files, not for arbitrary files.
+- When the network is deactivated, the app remains fully usable.- Limit cover size to display (e.g. 512 px), not original images
+  keep in memory.
 
 ---
 
-## 13. Test- und Abnahmekonzept
+## 12. Persistence and state
 
-### 13.1 Reine JVM-Tests (`:core`)
+- **DataStore Preferences** for the small settings:
+  - Root URI
+  - three presets as JSON
+  - active preset
+  - EQ bypass
+  - Player volume
+  - Repeat/Auto Advance
+  - Sine frequency/volume
+  - last sync
+- **One** JSON entry for all presets, so no half-written sentence
+  comes from three different states.
+- Writing via a **conflated channel**: fast controller movements
+  only generate the latest version; an older writer never overwrites
+  a newer one.
+- A `StateFlow<AppSettings>` is the source of truth for the UI.
+- The audio thread only reads an immutable snapshot; DataStore I/O
+  never takes place there.
+- Incorrect or unknown JSON versions fall back to defaults and
+  are logged instead of blocking the app.
+- Format version in JSON so that later migrations are possible.
+- Optional: Export/import of all presets as a file is a later option
+  Nice-to-have, no starting scope.
 
-- Biquad-Impulsantwort und Notch-Tiefe bei 1 kHz/8 kHz.
-- Stabilität bei Q = 30 und Frequenzen nahe Nyquist.
-- Lowcut/Highcut-Flanken, Shelf-Verstärkung, Bell-Gain.
-- Koeffizienten-Überblendung: kein Sprung, kein DC-Drift.
-- Limiter: Decke wird nie überschritten; Stereo-Kopplung; Release-Zeit.
-- Preset-Validierung: sechs Bänder, Summen-Anhebung, Klemmung.
-- Clip-Erkennung: Schwellen und Hysterese.
-- Protokoll-JSON: v3 lesen/schreiben, unbekannte Felder, alte v2-Daten.
-- Benchmark: 6 Bänder stereo 48 kHz im Loop; Ziel < 15 ns/Sample,
-  keine Allokation im Pfad.
+---
 
-### 13.2 Android-Tests (`:app`)
+## 13. Test and acceptance concept
 
-- SAF-Scanner mit Testbaum (Mock-ContentResolver oder dokumentierte
-  Instrumentierung): Root + direkte Unterordner, rekursive Titel,
-  tiefere Ordner nicht als Knoten.
-- Permission-Entzug: gespeicherter Root, entzogene URI → Fehlerzustand.
-- Settings-Repository: DataStore-Roundtrip, konflatierter Schreiber,
-  Korruptions-Fallback.
-- Cover-Repository: eingebettet vor Online, Cache, Offline.
-- Sync-Mock: Fortschritt, Abbruch, Fehler, Deduplizierung.
-- Compose-UI-Tests: Player-Buttons, EQ-Auswahl/Farben, Sync-Auswahl.
+### 13.1 Pure JVM tests (`:core`)
 
-### 13.3 Emulator-Test (Pixel 10, API 37)
+- Biquad impulse response and notch depth at 1kHz/8kHz.
+- Stability at Q = 30 and frequencies close to Nyquist.
+- Lowcut/highcut edges, shelf gain, bell gain.
+- Coefficient blending: no jump, no DC drift.
+- Limiter: ceiling is never exceeded; stereo coupling; Release time.
+- Preset validation: six bands, sum boost, clamping.
+- Clip detection: thresholds and hysteresis.
+- Protocol JSON: v3 read/write, unknown fields, old v2 data.
+- Benchmark: 6 bands stereo 48 kHz in loop; Target < 15 ns/sample,
+  no allocation in the path.
 
-1. Musikordner über `adb push` nach `/sdcard/Download/TestMusic/`.
-2. In der App per SAF auswählen.
-3. Ordner-/Titel-Navigation, Play/Stop, Auto-Advance.
-4. EQ: Preset wechseln, Band aktivieren, Frequenz bei laufender Musik ändern.
-5. Bypass ein/aus; Lautstärke; Clip-Anzeige mit einem absichtlich lauten
-   Preset.
-6. Sinuston: 10-Hz-Slider, ±1 Hz, Stop.
-7. Sync-Mock: Auswahl, Fortschritt, Abbruch.
-8. App-Neustart: Root, Presets und Volume sind erhalten.
-9. Berechtigung entziehen (Files-App/`adb shell appops`), Fehlerbild prüfen.
-10. 10-Minuten-Dauerlauf: keine Underruns, kein Speicherwachstum.
+### 13.2 Android Tests (`:app`)
 
-### 13.4 Echtes Gerät (später)
+- SAF scanner with test tree (Mock-ContentResolver or documented
+  Instrumentation): Root + direct subfolders, recursive titles,
+  deeper folders not as nodes.
+- Permission revocation: saved root, revoked URI → error condition.
+- Settings repository: DataStore round trip, conflated writer,
+  Corruption fallback.
+- Cover repository: embedded in front of online, cache, offline.
+- Sync mock: progress, abort, error, deduplication.
+- Compose UI tests: player buttons, EQ selection/colors, sync selection.
 
-- Pixel 10 mit Android 17.
-- Bluetooth-Kopfhörer: Pairing, A2DP, Kopfhörer-Tasten, Trennen/Verbinden.
-- Hintergrundwiedergabe bei ausgeschaltetem Bildschirm.
-- Reale Bibliothek > 2 000 Dateien, gemischte Formate.
-- Akkuverbrauch bei 1 h Wiedergabe.
+### 13.3 Emulator test (Pixel 10, API 37)
 
-### 13.5 Abnahmekriterien je Seite
+1. Music folder via `adb push` to `/sdcard/Download/TestMusic/`.
+2. Select via SAF in the app.
+3. Folder/track navigation, play/stop, auto advance.
+4. EQ: Change preset, activate band, change frequency while music is playing.
+5. Bypass on/off; Volume; Clip display with an intentionally loud
+   preset.
+6. Sine tone: 10 Hz slider, ±1 Hz, stop.
+7. Sync Mock: Select, Progress, Cancel.
+8. App restart: Root, presets and volume are preserved.
+9. Revoke permission (Files app/`adb shell appops`), check error image.
+10. 10-minute endurance run: no underruns, no memory growth.
 
-| Seite | Abnahme |
+### 13.4 Real device (later)
+
+- Pixel 10 with Android 17.
+- Bluetooth headphones: pairing, A2DP, headphone buttons, disconnect/connect.
+- Background playback when screen is off.
+- Real library > 2 000 files, mixed formats.
+- Battery consumption during 1 hour of playback.
+
+### 13.5 Acceptance criteria per page
+
+| Page | Acceptance |
 |---|---|
-| Player | Ein Laie kann nach dem ersten Start Musik abspielen; alle fünf Kernbuttons funktionieren ohne Erklärung |
-| EQ | Drei Presets, sechs Bänder, alle sieben Typen; Werte per Tastatur; Bypass wirkt sofort |
-| Setup | Root-Ordner bleibt nach Neustart; Sinuston ist in 1-Hz-Schritten einstellbar |
-| Sync | Auswahl ist eindeutig; Fortschritt sichtbar; Mock ist klar gekennzeichnet |
-| Stabilität | 10-Minuten-Dauerlauf ohne Absturz/Underrun; entzogene Rechte führen zu sauberem Fehlerbild |
-| Performance | DSP-Messwerte und Speicherbudget eingehalten (13.6) |
+| Players | A layperson can play music after the first start; all five core buttons work without explanation || EQ | Three presets, six bands, all seven types; Values ​​via keyboard; Bypass works immediately |
+| Setup | Root folder remains after reboot; Sine tone can be set in 1 Hz steps |
+| Sync | Choice is clear; Progress visible; Mock is clearly marked |
+| Stability | 10-minute endurance run without crash/underrun; Revoked rights lead to a clean error pattern |
+| Performance | DSP measurements and memory budget adhered to (13.6) |
 
-### 13.6 Messbudgets
+### 13.6 Measurement budgets
 
-| Bereich | Ziel | Messung |
+| Area | Target | Measurement |
 |---|---|---|
-| DSP | 6 Bänder stereo 48 kHz < 15 ns/Sample | JVM-Benchmark, 10 000 Blöcke, warmup |
-| Audio | 0 Underruns im 10-Minuten-Test | ExoPlayer-/AudioTrack-Statistik, Log |
-| Allokation | keine neuen Objekte pro Audio-Puffer | Code-Review + Benchmark |
-| Bibliothek | 2 000 Dateien < 1,5 s Scan | Zeitmessung mit Testbaum |
-| UI | kein Main-Thread-I/O > 16 ms | StrictMode im Debug-Build |
-| Cover | kein UI-Block; Timeout 5 s | Trace |
-| App-Start | < 1 s bis bedienbar bei gecachtem Index | Cold-/Warm-Start-Messung |
+| DSP | 6 bands stereo 48 kHz < 15 ns/sample | JVM benchmark, 10 000 blocks, warmup |
+| Audio | 0 underruns in the 10-minute test | ExoPlayer/AudioTrack Statistics, Log |
+| Allocation | no new objects per audio buffer | Code review + benchmark |
+| Library | 2,000 files < 1.5 s scan | Time measurement with test tree |
+| UI | no main thread I/O > 16 ms | StrictMode in debug build |
+| Cover | no UI block; Timeout 5 s | Trace |
+| App launch | < 1 s to operable with cached index | Cold/warm start measurement |
 
 ---
 
 ## 14. Roadmap
 
-| Meilenstein | Inhalt | Fertig, wenn |
+| Milestone | Content | Done when |
 |---|---|---|
-| **M0 – Werkzeuge** | SDK-CLI, API-37-Systemimage, AVD Pixel 10, Projektgerüst, Gradle-Build | `assembleDebug` + `testDebugUnitTest` grün; Emulator startet |
-| **M1 – Kern** | `:core`: Modelle, Validierung, Biquad, Limiter, Clip-Erkennung, DTOs | JVM-Tests und Benchmark grün |
-| **M2 – Bibliothek** | SAF-Auswahl, Scanner, flaches Ordner-Modell, Settings-Repository, Permissions | Root bleibt erhalten; rekursive Titel korrekt |
-| **M3 – Wiedergabe** | ExoPlayer, MediaSessionService, DSP-Processor, Volume, Limiter, Notification | Play/Stop mit Filter hörbar; Hintergrund läuft |
-| **M4 – Player-UI** | Tabs, Ordner/Titel-Navigation, Cover, Volume, Bypass, Preset | Mockup-Player vollständig bedienbar |
-| **M5 – EQ-UI** | Drei Presets, sechs Bänder, Editor, Persistenz, Bypass | Alle Filtertypen editierbar und hörbar |
-| **M6 – Setup + Sinus** | Root-Anzeige, Send-to-Watch-Navigation, Sinuston | Frequenz/Pegel präzise, 10-Hz-Slider, ±1 Hz |
-| **M7 – Sync-Mock** | Checkbox-Liste, zwei Sync-Buttons, Fortschritt, Abbruch | Mock vollständig, klar gekennzeichnet |
-| **M8 – Feinschliff** | Cover online, Accessibility, Fehlerbilder, Lint, Dark Theme, Tests | Abnahmekriterien aus 13.3 erfüllt |
-| **M9 – Echttest** | Pixel 10, Bluetooth, reale Bibliothek, Akku, Release-Build | Freigabekriterien aus 13.4 erfüllt |
+| **M0 – Tools** | SDK CLI, API 37 system image, AVD Pixel 10, project framework, Gradle build | `assembleDebug` + `testDebugUnitTest` green; Emulator starts |
+| **M1 – Core** | `:core`: Models, Validation, Biquad, Limiter, Clip Detection, DTOs | JVM tests and benchmark green |
+| **M2 – Library** | SAF selection, scanner, flat folder model, settings repository, permissions | Root remains intact; recursive titles correct |
+| **M3 – Playback** | ExoPlayer, MediaSessionService, DSP Processor, Volume, Limiter, Notification | Play/Stop with filter audible; background running |
+| **M4 – Player UI** | Tabs, Folder/Track Navigation, Cover, Volume, Bypass, Preset | Mockup player fully operable |
+| **M5 – EQ UI** | Three presets, six bands, editor, persistence, bypass | All filter types editable and audible |
+| **M6 – Setup + Sine** | Root display, send-to-watch navigation, sine tone | Frequency/level precise, 10 Hz slider, ±1 Hz |
+| **M7 – Sync Mock** | Checkbox list, two sync buttons, progress, cancel | Mock complete, clearly marked |
+| **M8 – fine tuning** | Cover online, accessibility, error images, lint, dark theme, tests | Acceptance criteria from 13.3 met |
+| **M9 – real test** | Pixel 10, Bluetooth, Real Library, Battery, Release Build | Release criteria from 13.4 met |
 
-Reihenfolge bewusst: **erst spielbar, dann fein einstellbar, dann Sync.**
-Die Sync-Buttons bleiben bis M7 sichtbar, aber als Mock gekennzeichnet.
+Order conscious: **first playable, then finely adjustable, then sync.**
+The sync buttons remain visible until M7, but are marked as mock.
 
 ---
 
-## 15. Projektstruktur und Build
+## 15. Project structure and build
 
-### 15.1 Dateien (Soll)
+### 15.1 Files (target)
 
 ```
 NotchedMusic-Phone/
@@ -1022,42 +1010,40 @@ NotchedMusic-Phone/
 └── docs/                         ← optional: Messprotokolle, Testdaten
 ```
 
-### 15.2 Versionen
+### 15.2 versions
 
-An die vorhandene, funktionierende Watch-Basis angelehnt (nur als
-Versionsreferenz, keine Änderung dort) und im Cache vorhanden:
+Based on the existing, functioning watch base (only as
+Version reference, no change there) and present in cache:
 
-| Baustein | Version | Bemerkung |
+| building block | Version | Remark |
 |---|---|---|
-| Gradle Wrapper | 9.6.0 | bestehende Distribution im Cache |
-| Android Gradle Plugin | 9.5.1 | vorhanden |
-| Kotlin | 2.3.20 | vorhanden |
-| Compose BOM | 2026.09.00 | vorhanden |
-| Kotlinx Serialization | 1.12.0 | vorhanden |
-| Media3 | 1.11.1 | vorhanden |
-| DataStore | 1.3.0 | vorhanden |
-| Play Services Wearable | 20.0.1 | für spätere echte Sync-Anbindung |
-| Navigation Compose | 2.10.2 | stabil; Download nötig |
-| Coil 3 | 3.6.3 | Cover-Cache; Download nötig |
-| WorkManager | 2.12.0 | optional für Hintergrund-Cover-Sync |
-| core-ktx / Activity / Lifecycle | 1.18.0 / 1.13.0 / 2.10.0 | vorhanden |
+| Gradle wrappers | 9.6.0 | existing distribution in cache |
+| Android Gradle Plugin | 9.5.1 | available |
+| Kotlin | 2.3.20 | available |
+| Compose BOM | 2026.09.00 | available |
+| Kotlinx Serialization | 1.12.0 | available |
+| Media3 | 1.11.1 | available |
+| DataStore | 1.3.0 | available |
+| Play Services Wearable | 20.0.1 | for later real sync connection |
+| Navigation Compose | 2.10.2 | stable; Download required |
+| Coil 3 | 3.6.3 | cover cache; Download required |
+| WorkManager | 2.12.0 | optional for background cover sync |
+| core-ktx/Activity/Lifecycle | 1.18.0 / 1.13.0 / 2.10.0 | available |`minSdk = 33` (Android 13) as starting value: This avoids the legacy
+Storage permissions and matches the watch base (minSdk 33). If the app
+is intended to run on older phones, this is a deliberate later expansion.
 
-`minSdk = 33` (Android 13) als Startwert: Das vermeidet die Legacy-
-Speicherberechtigungen und passt zur Watch-Basis (minSdk 33). Wenn die App
-auf älteren Telefonen laufen soll, ist das eine bewusste spätere Erweiterung.
-
-### 15.3 Build-Konfiguration
+### 15.3 Build configuration
 
 - `compileSdk = 37`, `targetSdk = 37`, `minSdk = 33`.
-- Java/Kotlin-Toolchain 17.
-- Compose-Compiler-Plugin über Kotlin-Version.
-- `buildFeatures { compose = true; buildConfig = true }` (BuildConfig für
-  Debug-Diagnose).
-- `org.gradle.parallel=true` erst nachprüfen, nicht blind einschalten.
-- `org.gradle.configuration-cache=true` wie in der Referenz.
-- Keine dynamischen Versionen, keine `latest.release`.
+- Java/Kotlin toolchain 17.
+- Compose compiler plugin over Kotlin version.
+- `buildFeatures { compose = true; buildConfig = true }` (BuildConfig for
+  Debug diagnostics).
+- Check `org.gradle.parallel=true` first, don't turn it on blindly.
+- `org.gradle.configuration-cache=true` as in the reference.
+- No dynamic versions, no `latest.release`.
 
-### 15.4 Build-Kommandos
+### 15.4 Build commands
 
 ```bat
 cd Z:\android_projekte\NotchedMusic\NotchedMusic-Phone
@@ -1066,98 +1052,97 @@ gradlew.bat :testDebugUnitTest
 gradlew.bat :connectedDebugAndroidTest
 ```
 
-Erwartung: `BUILD SUCCESSFUL`; Warnungen sind zu erklären, keine neuen
-Deprecation-Sümpfe.
+Expectation: `BUILD SUCCESSFUL`; Warnings need to be explained, not new ones
+Deprecation swamps.
 
 ---
 
-## 16. Risiken, offene Punkte und Entscheidungen
+## 16. Risks, open points and decisions
 
-### 16.1 Risiken
+### 16.1 Risks
 
-| Risiko | Auswirkung | Gegenmaßnahme |
+| Risk | Impact | Countermeasure |
 |---|---|---|
-| 3 Presets vs. 2 Presets in der bestehenden Uhr-App | Echter Sync funktioniert erst nach Uhr-Anpassung | v3-Protokoll mit allen drei Presets; bis zur separaten Uhr-Anpassung nur Mock; keine Änderung am Uhr-Projekt |
-| SAF-Scan großer Bäume | lange Wartezeit, UI-Ruckeln | Cursor-Scan im Hintergrund, Limits, Snapshot im RAM |
-| Online-Cover | Datenschutz, Rate-Limits, Offline | eingebettetes Cover zuerst, Cache, Timeout, klare Opt-out-Möglichkeit |
-| Echte Bluetooth-Strecke | im Emulator nicht prüfbar | Test auf Pixel 10 mit Kopfhörern; Standard-Audiospur statt Sonderweg |
-| Limiter vs. Transienten | hörbare Verzerrung bei extremen Presets | konservative Summen-Anhebung, Messung, optionales Lookahead |
-| Android-17-Verhalten | neue Permission-/Service-Regeln | früh gegen API 37 bauen, Permissions deklarativ und lazy anfordern |
-| Lautstärke-Erwartung | Nutzer verwechselt System- und App-Volume | beide sichtbar erklären; System bleibt unangetastet |
-| Rechteentzug | App zeigt leere Bibliothek | expliziter „nicht verfügbar“-Zustand mit Aktion |
-| Emulator-Performance | falsche DSP-Messwerte | DSP-Benchmark auf JVM; Emulator nur für Integration |
+| 3 presets vs. 2 presets in the existing watch app | Real sync only works after watch adjustment | v3 protocol with all three presets; up to the separate watch adjustment only mock; no change to the watch project |
+| SAF scan of large trees | long waiting time, UI stuttering | Background cursor scan, limits, snapshot in RAM |
+| Online cover | Data protection, rate limits, offline | embedded cover first, cache, timeout, clear opt-out option |
+| True Bluetooth range | cannot be tested in the emulator | Test on Pixel 10 with headphones; Standard audio track instead of special path |
+| Limiters vs. Transients | audible distortion at extreme presets | conservative sum increase, measurement, optional lookahead |
+| Android 17 behavior | new permission/service rules | Build early against API 37, request permissions declaratively and lazy |
+| Volume expectation | User confused system and app volume | explain both visibly; System remains untouched |
+| Withdrawal of rights | App shows empty library | explicit “unavailable” state with action |
+| Emulator performance | incorrect DSP readings | DSP benchmark on JVM; Emulator for integration only |
 
-### 16.2 Offene Entscheidungen (Default in Klammern)
+### 16.2 Open decisions (default in brackets)
 
-1. **Watch-Sync (entschieden):** Die Uhr wird später separat angepasst. Die Phone-App sendet
-   immer drei Presets im v3-Format; bis zur Anpassung bleibt der echte
-   Sync deaktiviert und der Mock aktiv. (Keine offene Entscheidung mehr.)
-2. **Auto-Advance/Repeat:** standardmäßig an (Default) oder nur Play/Stop
-   wie im Mockup?
-3. **Sinuston-Bereich:** 100–15 000 Hz (Default) oder 20–20 000 Hz?
-4. **Online-Cover:** MusicBrainz + Cover Art Archive (Default) oder
+1. **Watch Sync (decided):** The watch will be adjusted separately later. The phone app sends
+   always three presets in v3 format; Until it is adjusted, the real one remains
+   Sync deactivated and the mock active. (No more open decision.)
+2. **Auto-Advance/Repeat:** on by default or only Play/Stop
+   like in the mockup?
+3. **Sine tone range:** 100-15,000 Hz (default) or 20-20,000 Hz?
+4. **Online cover:** MusicBrainz + Cover Art Archive (default) or
    iTunes Search API?
-5. **App-Name:** `NotchedMusic`/`NotchedMusicPhone` (Default) oder eigener
-   Produktname?
-6. **minSdk:** 33 (Default) oder tiefer für ältere Geräte?
-7. **EQ-Volume:** Preamp je Preset (Default, wie im Mockup) oder zusätzlich
-   je Band? Die Anforderung nennt Volume unter den Filterfeldern; technisch
-   ist ein Preset-Preamp die saubere Lösung.
-8. **Echtes Watch-Sync im ersten Release:** Mock (Default laut Anforderung)
-   oder schon Data Layer?
-9. **Systemlautstärke-Anzeige:** nur Hinweis (Default) oder zusätzlich
-   in der App sichtbar?
-10. **Preset-Export:** Startumfang oder später?
+5. **App name:** `NotchedMusic`/`NotchedMusicPhone` (default) or your own
+   Product name?
+6. **minSdk:** 33 (default) or lower for older devices?
+7. **EQ volume:** Preamp per preset (default, as in the mockup) or additionally
+   per band? The request names Volume among the filter fields; technical
+   A preset preamp is the clean solution.
+8. **Real Watch Sync in the first release:** Mock (default as required)
+   or already data layer?
+9. **System volume display:** only an indication (default) or additionally
+   visible in the app?
+10. **Preset export:** Starting scope or later?
 
-### 16.3 Architektur-Entscheidungen, die stehen
+### 16.3 Architectural decisions that status
 
-- SAF statt breiter Medienberechtigung.
-- Media3/ExoPlayer für Musik, eigener `AudioTrack` nur für den Sinuston.
-- IIR-Biquads statt FFT/Linear-Phase.
-- Genau ein aktives Preset, keine Stapelung.
-- Preamp und Player-Volume getrennt; Sync verstellt nie den Hörpegel.
-- Limiter vor der 16-Bit-Wandlung; Decke −1 dBFS.
-- Drei Presets mit je sechs Bändern; `OFF` ist ein Filtertyp. Das ist final.
-- Das bestehende Uhr-Projekt bleibt unangetastet und wird später separat
-  angepasst; Phone-Sync sendet solange nur Mock bzw. klar gekennzeichneten
-  „noch nicht unterstützt“-Status.
-- Sync jetzt Mock, Schnittstelle von Anfang an sauber.
-- `:core` bleibt Android-frei und wiederverwendbar.
-
----
-
-## 17. Sofort nächste Schritte nach Freigabe
-
-0. **Vor Beginn: bestätigen, dass das Uhr-Projekt unverändert bleibt.** Alle
-   Arbeiten finden ausschließlich in `NotchedMusic-Phone` statt.
-1. SDK-Pakete und AVD einrichten (Abschnitt 0.4).
-2. Projektgerüst aus der Watch-Basis ableiten:
-   `settings.gradle.kts`, `libs.versions.toml`, Wrapper, zwei Module.
-3. `:core` mit Datenmodellen, Biquad, Limiter und Tests bauen.
-4. SAF-Auswahl und Scanner implementieren; mit Testbaum im Emulator prüfen.
-5. Playback-Service mit DSP und MediaSession aufsetzen.
-6. Player-UI gegen die Mockups bauen.
-7. EQ-UI und Persistenz.
-8. Setup/Sinus.
-9. Sync-Mock.
-10. Cover, Feinschliff, Messungen, echter Bluetooth-Test.
+- SAF instead of broad media authorization.
+- Media3/ExoPlayer for music, separate 'AudioTrack' only for the sine tone.
+- IIR biquads instead of FFT/linear phase.
+- Exactly one active preset, no stacking.- Preamp and player volume separated; Sync never changes the listening level.
+- Limiter before 16-bit conversion; Ceiling −1 dBFS.
+- Three presets with six bands each; `OFF` is a filter type. This is final.
+- The existing watch project remains untouched and will be separated later
+  customized; As long as Phone-Sync only sends mock or clearly marked ones
+  “not yet supported” status.
+- Sync now mock, interface clean from the start.
+- `:core` remains Android-free and reusable.
 
 ---
 
-## 18. Anhang: Mockup-Referenz
+## 17. Immediately next steps after approval
 
-Die vier Screenshots zeigen:
+0. **Before beginning: confirm that the watch project remains unchanged.** All
+   Work takes place exclusively in `NotchedMusic-Phone`.
+1. Set up SDK packages and AVD (Section 0.4).
+2. Derive the project framework from the watch base:
+   `settings.gradle.kts`, `libs.versions.toml`, wrapper, two modules.
+3. Build `:core` with data models, biquad, limiters and tests.
+4. Implement SAF selection and scanner; Check with test tree in the emulator.
+5. Set up playback service with DSP and MediaSession.
+6. Build player UI against the mockups.
+7. EQ-UI and persistence.
+8. Setup/Sine.
+9. Sync Mock.
+10. Cover, finishing touches, measurements, real Bluetooth test.
 
-1. **Synchronize:** Liste mit Root/Unterordnern, Checkboxen, zwei
-   Sync-Buttons.
-2. **Player:** Tabs, Ordner-/Titelpfeile, Cover, Play, Volume, Bypass,
-   Preset.
-3. **EQ:** Drei Presets, sechs Filterchips (gewählt/blau, aktiv/grün),
-   Type/Freq/Q/Gain/Volume-Felder.
-4. **Setup:** Send to Watch, Select Root Folder, Root-Pfad, Play Sine Wave,
-   Frequenz-Slider mit ±-Buttons, Volume.
+---
 
-Der Plan folgt diesen Mockups. Zusätzliche Elemente (Clip-Badge,
-Ordner-Bottom-Sheet, „Filter aktiv“-Schalter, Sync-Mock-Banner) sind
-Ergänzungen, die die Bedienbarkeit verbessern, ohne die Mockup-Struktur zu
-verändern.
+## 18. Appendix: Mockup Reference
+
+The four screenshots show:
+
+1. **Synchronize:** List of root/subfolders, checkboxes, two
+   Sync buttons.
+2. **Player:** Tabs, Folder/Title Arrows, Cover, Play, Volume, Bypass,
+   preset.
+3. **EQ:** Three presets, six filter chips (selected/blue, active/green),
+   Type/Freq/Q/Gain/Volume fields.
+4. **Setup:** Send to Watch, Select Root Folder, Root Path, Play Sine Wave,
+   Frequency slider with ± buttons, volume.
+
+The plan follows these mockups. Additional elements (clip badge,
+Folder bottom sheet, “Filter active” switch, sync mock banner).
+Additions that improve usability without compromising the mockup structure
+change.

@@ -74,4 +74,4 @@ locally signed release APK is installed on the real watch. See
 | Phone → Watch | `/stats/ack` | APPLIED acknowledgement |
 
 See [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) for the full architecture and
-[`PROJEKTSTATUS.md`](PROJEKTSTATUS.md) for detailed project history.
+[`PROJECT_STATUS.md`](PROJECT_STATUS.md) for detailed project history.

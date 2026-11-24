@@ -1,140 +1,138 @@
-# NotchedMusic – Umsetzungsplan: Modi, 6-Band-EQ, Bibliothek, Player-Oberfläche
+# NotchedMusic – Implementation plan: modes, 6-band EQ, library, player interface
 
-> **Status: Historischer Entwurf, weitgehend umgesetzt.** Dieses Dokument beschreibt den
-> ursprünglichen Watch-Entwurf (zwei Presets, vier Filtertypen, fünf Seiten). Der aktuelle Stand
-> (13.11.2026) ist **drei Presets, sieben Filtertypen, echter Phone-Sync**; die Abweichungen und
-> der verifizierte Stand stehen in Abschnitt 12 sowie in `PROJEKTSTATUS.md`. Abschnitt 11 ist
-> weiterhin die Liste der geklärten beziehungsweise offenen Fragen.
+> **Status: Historical draft, largely implemented.** This document describes the
+> Original Watch design (two presets, four filter types, five pages). The current status
+> (11/13/2026) is **three presets, seven filter types, true phone sync**; the deviations and
+> The verified status can be found in Section 12 and in `PROJECT_STATUS.md`. Section 11 is
+> continues the list of clarified or open questions.
 
-Ausgangslage (ist fertig und gemessen): Wear-OS-Modul, `MediaSessionService` mit ExoPlayer,
-Hintergrundwiedergabe überlebt Bildschirm-AUS (auf dem Emulator verifiziert), dunkles OLED-Schema
-(5,3 % helle Pixel, Vorgabe ≤ 15 %), Notch-Filterkette mit 4,6 ns/Sample (3 Bänder, 48 kHz, Stereo).
+Initial situation (is finished and measured): Wear OS module, `MediaSessionService` with ExoPlayer,
+Background playback survives screen OFF (verified on emulator), dark OLED scheme
+(5.3% bright pixels, default ≤ 15%), notch filter chain at 4.6 ns/sample (3 bands, 48 kHz, stereo).
 
-Neu gewünscht: 2 gespeicherte EQ-Presets + Bypass als dritte Wahl, bis zu 6 frei parametrierbare
-Filter pro Preset (Lowshelf/Highshelf/Peak/Notch, Frequenz auf Hz genau, Q, Gain), Einstell-Screen,
-rekursive Bibliothek mit Ordnern (Alben), ausführliche Player-Oberfläche, Lautstärke, alles ohne
-Buffer-Underruns und ohne hörbares Nachklingen.
+Newly requested: 2 saved EQ presets + bypass as a third choice, up to 6 freely parameterizable ones
+Filter per preset (lowshelf/highshelf/peak/notch, frequency accurate to Hz, Q, gain), setting screen,
+recursive library with folders (albums), detailed player interface, volume, all without
+Buffer underruns and no audible ringing.
 
 ---
 
-## 1. Klangweg – wie es später aussieht
+## 1. Sound path – what it looks like later
 
 ```mermaid
 flowchart LR
-  A["MP3-Datei<br/>(Unterordner = Album)"] --> B["ExoPlayer-Decoder<br/>PCM in Komma-Rechnung"]
-  B --> C["Vor-Verstärkung<br/>preGain je Preset"]
-  C --> D["6 Biquads in Serie<br/>pro Kanal, Typ je Band"]
-  D --> E["Lautstärke<br/>volumeDb, App-Eigentum"]
-  E --> F["Pegel-Messung<br/>für Anzeige und Vorschlag"]
-  F --> G["Limiter<br/>Decke -1 dBFS"]
-  G --> H["Wandlung auf 16 Bit<br/>einzige harte Grenze"]
-  H --> I["System-Medienlautstärke<br/>→ AudioTrack → A2DP"]
-  J["DataStore<br/>Presets · Modus · volume_db"] -. "StateFlow" .-> E
-  K["Phone-App (später)<br/>Wear Data Layer / JSON"] -.-> J
+  A["MP3 file<br/>(subfolder = album)"] --> B["ExoPlayer decoder<br/>PCM in floating point"]
+  B --> C["Pregain<br/>preGain per preset"]
+  C --> D["6 biquads in series<br/>per channel, type per band"]
+  D --> E["Volume<br/>volumeDb, app-owned"]
+  E --> F["Level measurement<br/>for display and suggestion"]
+  F --> G["Limiter<br/>−1 dBFS ceiling"]
+  G --> H["Conversion to 16-bit<br/>the only hard limit"]
+  H --> I["System media volume<br/>→ AudioTrack → A2DP"]
+  J["DataStore<br/>presets · mode · volume_db"] -. "StateFlow" .-> E
+  K["Phone app (later)<br/>Wear Data Layer / JSON"] -.-> J
 ```
 
-**Warum intern nichts übersteuern kann:** zwischen Decoder und Limiter wird mit Komma-Zahlen
-gerechnet. Komma-Zahlen kennen keinen begrenzten Bereich – ein Zwischenwert von +40 dB ist eine
-völlig normale Zahl, kein Fehler. Übersteuerung ist physikalisch erst dort möglich, wo aus der
-Komma-Zahl eine **Ganzzahl** (16 Bit) werden muss. Deshalb sitzt die gesamte Pegel-Technik *vor*
-dieser einen Stelle:
+**Why nothing can override internally:** comma numbers are used between decoder and limiter
+calculated. Comma numbers have no limited range - an intermediate value of +40 dB is one
+completely normal number, no error. Overcontrol is only physically possible where the
+Comma number must be an **integer** (16 bits). That's why the entire level technology is *in front*
+this one place:
 
-| Stufe | Gehört | Aufgabe |
+| stage | Belongs | Task |
 |---|---|---|
-| Vor-Verstärkung `preGainDb` | **Preset** (Phone-App) | gleicht Presets untereinander ab; gleicht die Notch-Absenkung aus |
-| **Lautstärke `volumeDb`** | **Uhr** (DataStore) | der Hörer-Regler der App: dreht alles gemeinsam herunter, bevor die Wandlung kommt – die Krone bedient ihn |
-| Pegel-Messung + Limiter | Uhr, automatisch | misst den Ausschlag, fängt Rest-Spitzen ab, meldet dauerhaftes Limitieren |
-| Wandlung auf 16 Bit | Uhr | die einzige harte Grenze im digitalen Teil |
+| Pre-gain `preGainDb` | **Preset** (Phone App) | compares presets with each other; compensates for the notch lowering |
+| **Volume `volumeDb`** | **Watch** (DataStore) | the app's receiver control: turns everything down together before the conversion occurs - the crown operates it |
+| Level measurement + limiter | Watch, automatic | measures the deflection, intercepts residual peaks, reports permanent limiting |
+| Conversion to 16 bit | Watch | the only hard limit in the digital part |
 
-Dahinter wirkt noch die **System-Medienlautstärke der Uhr** – nach der Wandlung, also außerhalb
-unserer Kette. Sie kann Übersteuerung nicht mehr reparieren, nur leiser machen. Empfehlung als
-einmaliger Hinweis in den Einstellungen: System-Lautstärke hoch lassen (~80 %) und **über unsere
-App-Lautstärke regeln** – die wirkt vor der Wandlung und ist damit der saubere Weg.
+Behind this, the **system media volume of the watch** still works - after the conversion, i.e. outside
+our chain. It can no longer repair overdrive, only make it quieter. Recommendation as
+One-time note in the settings: Leave the system volume high (~80%) and **via our
+Control app volume** - this works before the conversion and is therefore the clean way.
 
 > [!IMPORTANT]
-> **Drei Pegel, drei Zuständigkeiten – deshalb braucht das Preset keinen vierten.**
+> **Three levels, three responsibilities - that's why the preset doesn't need a fourth.**
 >
-> | Pegel | Wirkt | Merkt sich | Zuständig für |
+> | Level | Works | Remembers | Responsible for |
 > |---|---|---|---|
-> | `preGainDb` (im Preset) | in der Kette, vor dem EQ | Preset / Phone-App | Presets angleichen (Klang-Design) |
-> | `volumeDb` (auf der Uhr) | in der Kette, nach dem EQ, **vor** der Wandlung | unser DataStore | Übersteuerung verhindern + Hörpegel; Krone und Bluetooth greifen hierauf zu |
-> | System-Medienlautstärke | nach unserer Kette | das System, pro Bluetooth-Gerät | Grobabstufung fürs Ohr |
+> | `preGainDb` (in preset) | in the chain, before the EQ | Preset / Phone App | Align presets (sound design) |
+> | `volumeDb` (on the watch) | in the chain, after the EQ, **before** the conversion | our DataStore | Prevent clipping + listening level; Krone and Bluetooth access this |
+> | System media volume | according to our chain | the system, per Bluetooth device | Rough grading for the ear |
 >
-> Der Grund für `volumeDb` in der App statt nur der System-Lautstärke: Gegen die Wandlung auf
-> 16 Bit hilft kein Regler danach mehr – ist ein Wert einmal abgeschnitten, ist die Verzerrung
-> schon da. Die eigene Stufe ist außerdem unabhängig von System und Kopfhörer, überlebt deren
-> Wechsel und kann später von der Phone-App **mit** den Preset-Werten geschickt werden, ohne die
-> System-Lautstärke des Nutzers anzufassen.
+> The reason for `volumeDb` in the app instead of just the system volume: against the conversion
+> 16 bit no controller helps anymore - once a value is cut off, there is distortion
+> already there. Your own level is also independent of the system and headphones and survives them
+> Change and can be sent later from the phone app **with** the preset values, without the> Touch the user's system volume.
 >
-> **Und weil es „einfach sein" muss: der Limiter arbeitet vollautomatisch.** Er verhindert
-> Abschneiden ohne einen Handgriff. Die Lautstärke ist nur dann von Hand zu senken, wenn der
-> Limiter dauernd arbeitet (dann klingt es auf Dauer gepresst). Dafür zeigt die Oberfläche live
-> den Ausschlag und bietet bei dauerhaftem Limitieren per **einem Tipp** „−2 dB" an. Kein Menü,
-> kein Regler-Wandern, keine Kalibrier-Seite.
+> **And because it has to be “simple”: the limiter works fully automatically.** It prevents
+> Cutting without a single movement. The volume can only be lowered manually if the
+> Limiter works continuously (then it sounds pressed for a long time). The surface shows live
+> the deflection and offers "−2 dB" with **one tap** for permanent limiting. No menu,
+> no controller wandering, no calibration page.
 
-## 2. Digitaler Filter – die bewusste Technikentscheidung
+## 2. Digital filter – the conscious technology decision
 
-**Grundbaustein bleibt das Biquad (2. Ordnung, Transposed Direct Form II).** Für alle vier geforderten
-Filtertypen gibt es exakte RBJ-Formeln; jeder Filter kostet pro Sample 5 Multiplikationen und
-4 Additionen – **egal welcher Typ**. Sechs Bänder × 2 Kanäle = 12 Biquads ≈ **9 ns/Sample** bei
-48 kHz (Hochrechnung aus der gemessenen 3-Band-Kette), das sind **0,09 % einer CPU-Kernzeit**.
+**The basic building block remains the Biquad (2nd order, Transposed Direct Form II).** For all four required
+There are exact RBJ formulas for filter types; each filter costs 5 multiplications per sample and
+4 additions – **no matter what type**. Six bands × 2 channels = 12 biquads ≈ **9 ns/sample**
+48 kHz (extrapolation from the measured 3-band chain), which is **0.09% of a CPU core time**.
 
-Zur Sorge „Algorithmus zu einfach": der richtige Schritt nach oben ist **nicht** eine
-FFT-/Faltungslösung („linear-phase EQ"). Die hätte bei einem schmalen Notch eine Impulsantwort von
-mehreren Hundert Millisekunden, braucht Puffer von 4–8 kB pro Kanal und erhöht die CPU-Last um
-Größenordnungen – genau das Gegenteil von dem, was eine Uhr braucht. IIR erster Wahl ist hier der
-Standard, weil er bei gleicher Wirkung ~0 Latenz und minimale Last hat.
+Regarding the “algorithm too simple” concern: the right step up is **not** one
+FFT/convolution solution (“linear-phase EQ”). With a narrow notch it would have an impulse response of
+several hundred milliseconds, requires buffers of 4–8 kB per channel and increases the CPU load
+Orders of magnitude – exactly the opposite of what a watch needs. The first choice here is the IIR
+Standard because it has ~0 latency and minimal load with the same effect.
 
-Was stattdessen die Qualität wirklich hebt (und was jetzt fehlt):
+What really improves the quality instead (and what is now missing):
 
-| Punkt | Heute | Geplant |
+| point | Today | Planned |
 |---|---|---|
-| Koeffizienten | bei Preset-Wechsel sofort getauscht → **Knacken möglich** | Weiche Überblendung über 128 Samples (Koeffizienten-Interpolation), kein Klick beim Regeln am Handy |
-| Zustand/Rechengenauigkeit | `Float`-Zustand, `Double`-Koeffizienten | bleibt so (für Q ≤ 30 nachweislich gut); **Test** prüft auf DC-Drift und anwachsende Impulsantwort |
-| Runden der Sample-Werte | Abschneiden | **entchieden: Runden** – praktisch kostenlos, siehe unten |
-| Übersteuerung | harter Clamp | **entchieden: Limiter**, Decke **−1 dBFS**, 1 ms Attack / 50 ms Release |
-| Allokation im Audiopfad | Wechsel-Arbeitspuffer wird je Aufruf erzeugt | ein fester Arbeitspuffer (max. Puffergröße), kein Objekt-Neubau im Takt |
-| Bänder | Notch-artig über Bandbreite | 4 Typen + `enabled` je Band, `Q` direkt, Shelf-Flanke optional |
+| Coefficients | replaced immediately when changing presets → **cracking possible** | Smooth crossfading over 128 samples (coefficient interpolation), no click when controlling on the cell phone |
+| Condition/calculation accuracy | `float` state, `double` coefficients | stays that way (demonstrably good for Q ≤ 30); **Test** checks for DC drift and increasing impulse response |
+| Rounding the sample values ​​| Cut off | **decided: rounds** – practically free, see below |
+| overload | hard clamp | **decided: limiter**, ceiling **−1 dBFS**, 1 ms attack / 50 ms release |
+| Allocation in the audio path | Change working buffer is created per call | a fixed working buffer (max. buffer size), no new object construction in cycle |
+| Ribbons | Notch-like over bandwidth | 4 types + `enabled` per band, `Q` direct, shelf edge optional |
 
-### Was Runden und Limiter kosten
+### What rounds and limiters cost
 
-**Runden ist gratis, nicht fast gratis.** Der Übergang von Komma-Zahl (Filter) zu Ganzzahl
-(Audio-Ausgabe) ist auf der Hardware immer genau ein Umwandlungsbefehl; der Unterschied ist nur
-dessen Rundungs-Modus – Abschneiden Richtung Null (heute) gegen nächsten Wert (geplant, in Kotlin
-`Float.roundToInt()`). Die Laufzeit setzt beide in denselben Befehl um. Die Obergrenze fangen wir
-*vor* der Umwandlung im Komma-Bereich ab (`coerceIn(-1f, 1f)`), dadurch bleibt der Pfad ohne
-Sonderzweige. Der Benchmark misst die Umwandlung mit, damit das keine Behauptung bleibt. Bewusst
-**ohne** Dithering: das wäre echte Zusatzrechnung plus ein hörbar leises Rauschen – bei
-verlustbehaftetem MP3-Material ohne Gewinn.
+**Rounding is free, not almost free.** The transition from comma number (filter) to integer
+(Audio output) is always exactly one conversion command on the hardware; the difference is just
+its rounding mode – truncation towards zero (today) against next value (planned, in Kotlin
+`Float.roundToInt()`). The runtime converts both into the same command. We catch the upper limit
+*before* the conversion in the decimal area (`coerceIn(-1f, 1f)`), this leaves the path without
+Special branches. The benchmark also measures the conversion so that this does not remain an assertion. Conscious
+**without** dithering: that would be a real additional calculation plus an audibly quiet noise - at
+lossy MP3 material with no gain.
 
-**Limiter: zwei Multiplikationen, zwei Additionen, ein Vergleich pro Sample** – grob so viel wie
-*ein halbes* Biquad, bei 6 Bändern unter 4 % Zusatz auf die Kette. Attack und Release kosten nichts
-extra, sie sind nur die Glättungs-Konstante. Abschneiden ist bei Bändern mit bis zu +24 dB kein
-Randfall mehr, sondern ein Zustand, den ein Preset mit zwei, drei überlappenden Anhebern regelmäßig
-trifft – und ein Zerrsignal enthält Energie über das ganze Band, also genau auch in dem Bereich,
-den der Notch ruhigstellen soll. Deshalb zwei Schichten: das **Validieren** begrenzt die
-Summen-Anhebung aller Bänder zusammen (max. +12 dB, läuft einmal beim Ändern eines Presets, nie
-pro Sample), der Limiter mit Decke **-1 dBFS** bleibt das Fangnetz, nicht die Regel.
+**Limiter: two multiplications, two additions, one comparison per sample** – roughly as much as
+*half* a biquad, with 6 bands less than 4% added to the chain. Attack and release cost nothing
+extra, they are just the smoothing constant. There is no clipping on bands up to +24 dB
+Edge case more, but a condition that a preset with two or three overlapping lifters regularlyhits - and a distortion signal contains energy across the entire band, i.e. exactly in the area where
+which the notch is supposed to quiet. Therefore two layers: the **validation** limits the
+Sum boost of all bands together (max. +12 dB, runs once when changing a preset, never
+per sample), the limiter with ceiling **-1 dBFS** remains the safety net, not the rule.
 
-### Hörbares Nachklingen – ehrliche Einordnung
+### Audible lingering – honest classification
 
 > [!IMPORTANT]
-> Ein schmaler Notch **muss** zeitlich verschmieren – das ist Zeit-Frequenz-Unschärfe, kein
-> Implementierungsfehler. Die Hüllkurve klingt mit `Q/(π·f₀)` ab. Bei Q = 100 und 8 kHz ergibt das
-> rund 27 ms Nachklang; bei Q = 8 sind es ~2 ms und unhörbar. Deshalb:
-> * **Q-Obergrenze 30** (heute 100) – breiter Notch, immer noch sehr selektiv, aber ohne Schmieren
-> * Voreinstellung Q = 4…8 für Tinnitus-Notche
-> * ein Test misst die Abklingzeit der Impulsantwort und vergleicht sie mit der Theorie – so sieht
->   man Limit-Zyklen oder anwachsende Ausgaben sofort, statt sie zu hoffen
+> A narrow notch **must** blur in time - that's time-frequency blur, not
+> Implementation error. The envelope decays with `Q/(π·f₀)`. At Q = 100 and 8 kHz this results
+> around 27 ms decay; at Q = 8 it is ~2 ms and inaudible. Therefore:
+> * **Q cap 30** (today 100) - wide notch, still very selective, but without smearing
+> * Default setting Q = 4…8 for tinnitus notche
+> * a test measures the decay time of the impulse response and compares it with theory - this is what it looks like
+> you can limit cycles or increasing expenses immediately instead of hoping for them
 
 > [!NOTE]
-> **Latenz ist bewusst kein Ziel.** Das Gerät ist ein Musikplayer, kein Telefon – die Kette hat
-> keinen Rückkopplungspfad, auf den Verzug lästig wirken könnte. Deshalb: keine Vorausschau im
-> Limiter, keine Linearphasen-Filter, keine bewusste Puffer-Verkleinerung. Alle
-> Entscheidungen unten fallen zugunsten von **Rechenaufwand, Speicher und Akku**, nie zugunsten
-> von Latenz.
+> **Latency is intentionally not a goal.** The device is a music player, not a phone – the chain has it
+> no feedback path on which delay could be annoying. Therefore: no foresight
+> Limiter, no linear phase filters, no deliberate buffer reduction. All
+> Decisions below are in favor of **computational effort, memory and battery**, never in favor
+> of latency.
 
-### Filter-Datenformat (zugleich das Bluetooth-Protokoll)
+### Filter data format (also the Bluetooth protocol)
 
 ```json
 {
@@ -148,414 +146,406 @@ pro Sample), der Limiter mit Decke **-1 dBFS** bleibt das Fangnetz, nicht die Re
 ```
 
 * `type`: `LOW_SHELF | HIGH_SHELF | PEAKING | NOTCH` (Reserve: `LOW_PASS`, `HIGH_PASS`)
-* `frequencyHz` als `Double`, Anzeige ganzzahlig in Hz (Telefon kann exakt eingegeben, Uhr dreht grob)
-* `q` direkt (Anzeige-Hilfe: „entspricht 912 Hz Bandbreite"), Bereich 0,1 … 30
-* `gainDb` Bereich **±24 dB** je Band (Anforderung ±20 plus Luft), Vor-Verstärkung ±12 dB
-* **`volumeDb` (Hörer-Lautstärke) ist bewusst nicht im Preset** – sie gehört auf die Uhr
-  (Abschnitt 1): Die Phone-App soll den Klang schicken, aber nie über den Hals des Nutzers
-  hinweg dessen Lautstärke verstellen
-* `enabled` je Band: Telefon kann ein Band stummschalten, ohne es zu löschen
-* **max. 6 Bänder** – das Validieren schneidet Überzählige ab, der Audiopfad wirft nie
+* `frequencyHz` as `Double`, display integer in Hz (phone can be entered exactly, watch rotates roughly)
+* `q` directly (display help: “corresponds to 912 Hz bandwidth”), range 0.1 … 30
+* `gainDb` range **±24 dB** per band (requirement ±20 plus air), pre-gain ±12 dB
+* **`volumeDb` (listener volume) is deliberately not in the preset** - it belongs to the watch
+  (Section 1): The phone app should send the sound, but never over the user's neck
+  adjust its volume
+* `enabled` per band: Phone can mute a band without deleting it
+* **max. 6 bands** - validating cuts off excess, audio path never throws
 
-`bypass` wandert aus dem Preset heraus in den **Modus** (siehe 3) – ein Preset beschreibt nur noch
-den Klang, nicht die Schaltstellung. Das ist für die Phone-App klarer.
+`bypass` moves out of the preset into **mode** (see 3) - a preset only describes
+the sound, not the switch position. This is clearer for the Phone app.
 
-## 3. Modi und Speicherung
+## 3. Modes and storage
 
 ```kotlin
 enum class FilterMode { PRESET_1, PRESET_2, BYPASS }
 ```
 
-**Wirksam ist immer genau ein Preset** – P1 und P2 werden nicht gestapelt. `BYPASS` → Kette ohne
-Bänder (Lautstärke und Limiter bleiben aktiv – der Hörpegel ändert sich beim Umschalten nie).
+**Exactly one preset is always effective** - P1 and P2 are not stacked. `BYPASS` → chain without
+Bands (volume and limiter remain active - listening level never changes when switching).
 
-Weil später mehr als zwei Presets möglich sind, werden sie **nicht** als zwei Felder abgelegt,
-sondern als **geordnete Sammlung mit Kennung** (`PresetStore: Map<PresetId, FilterPreset>` plus
-Reihenfolge). Ein drittes Preset ist dann nur ein neuer Eintrag – Modus-Aufzählung, Datenbank-
-Schlüssel und die Phone-Schnittstelle bleiben dafür unverändert.
+Because more than two presets are possible later, they are **not** stored as two fields,
+but as an **ordered collection with identifier** (`PresetStore: Map<PresetId, FilterPreset>` plus
+order). A third preset is then just a new entry – mode list, database
+The key and the phone interface remain unchanged.
 
-* **DataStore Preferences** (Abhängigkeit ist schon im Projekt), Schlüssel: Presets als JSON,
-  `modus`, `volume_db`, `display_wach_behalten`, `zuletzt_synchronisiert`
-* **`volume_db` ist unser Hörpegel** (Abschnitt 1): eine Stufe für alles, unabhängig von System und
-  Kopfhörer, überlebt Gerätewechsel. Die System-Medienlautstärke speichern wir **nicht** mit – die
-  ist beim System in besten Händen (sie merkt sich ihre Stufe pro Bluetooth-Gerät)
-* Eine Quelle der Wahrheit: `AudioState(preset, mode, flags)` als `StateFlow`; `FilterSettings` wird
-  von einem `object` mit Handarbeit zu einer Repository-gekapselten Stelle
-* Der Audiopfad liest weiterhin nur ein `@Volatile` Feld – DataStore-IO passiert nie im Audio-Thread
-* Erster Start: P1 = bewährter Standard (Notch 8 kHz), P2 = leer, Modus = P1
+* **DataStore Preferences** (dependency is already in the project), key: Presets as JSON,
+  `mode`, `volume_db`, `display_keep_awake`, `last_synchronized`
+* **`volume_db` is our listening level** (Section 1): one level for everything, regardless of system and
+  Headphones, survives device changes. We **do not** save the system media volume - that
+  is in the best hands with the system (it remembers its level per Bluetooth device)* A source of truth: `AudioState(preset, mode, flags)` as `StateFlow`; `FilterSettings` becomes
+  from a handcrafted `object` to a repository encapsulated location
+* The audio path still only reads a `@Volatile` field - DataStore IO never happens in the audio thread
+* First start: P1 = proven standard (notch 8 kHz), P2 = empty, mode = P1
 
-## 4. Bibliothek: Wurzelordner mit Alben
+## 4. Library: root folder with albums
 
-Der Musikordner ist der **private App-Ordner der Uhr** – Wear OS hat keine
-Berechtigungsdialoge, deshalb ist das der einzige Weg ohne System-Medienmediathek:
-
-```
-/sdcard/Android/data/de.notchedmusic.watch/files/Music/     ← Wurzel
-├── 2024-03 Notch 7,3 kHz/                                   ← Album (Unterordner)
-│   ├── 01 - Morgen.mp3
-│   └── 02 - Abend.mp3
-└── Einzelspur.mp3                                           → im Sammel-Ordner „Wurzel“ mit dabei
-
-// Tiefere Unterordner innerhalb eines Ordners (z. B. Zusatz/Regen.mp3) erzeugen kein
-// eigenes Album – ihre Dateien zählen zum umgebenden Album.
-```
-
-Auf der Uhr einspielen (der Emulator und jede verbundene Uhr, USB oder WLAN-Debugging):
+The Music folder is the watch's **private app folder** - Wear OS doesn't have one
+Permission dialogs, so this is the only way without a system media library:
 
 ```
-adb push "C:\Musik\2024-03 Notch 7,3 kHz" "/sdcard/Android/data/de.notchedmusic.watch/files/Music/"
+/sdcard/Android/data/de.notchedmusic.watch/files/Music/     ← root
+├── 2024-03 Notch 7,3 kHz/                                   ← album (subfolder)
+│   ├── 01 - Morning.mp3
+│   └── 02 - Evening.mp3
+└── single-track.mp3                                           → collected in the “Root” folder
+
+// Deeper subfolders inside a folder (e.g. Extra/Rain.mp3) do not create
+// their own album – their files belong to the surrounding album.
 ```
 
-Danach in der App auf **Neu laden**. In Android Studio geht dasselbe grafisch über das Fenster
-**Device Explorer**. Die TicWatch ist kein USB-Massenspeicher und MTP gibt es auf Wear OS nicht –
-später kann die Phone-App Dateien über die Data Layer Strecke schicken (Grenzgröße beachten).
+Install on the watch (the emulator and any connected watch, USB or WiFi debugging):
 
-Scannen:
-* **Ein Ordner direkt unter der Wurzel = ein Album**, fertig. Kein Album-Baum, keine zweite
-  Ebene in der Oberfläche
-* Innerhalb eines Albums wird **rekursiv flachgezählt**: Unterordner darunter erzeugen keine
-  eigenen Alben, ihre Dateien gehören zum Album dazu (Reihenfolge: Nummerierung, sonst Name)
-* Dateinamen wie `01 - Morgen.mp3` → Titel „Morgen“, Sortierindex 1; sonst alphabetisch
-* Dateien lose in der Wurzel laufen nicht ins Leere: sie sammeln sich im Ordner „Wurzel“
-* Verstecktes (`.filename`) ignorieren; Schutz gegen Fehlerbäume: max. 6 Ebenen, max. 2 000
-  Dateien, max. 200 Alben. Scannen auf `Dispatchers.Default`, genau **ein** Durchlauf pro
-  „Neu laden“ – beim Wechsel in den Hintergrund wird nie gescannt
-* **keine** `MediaMetadataRetriever`-Schleife (pro Datei eine teure Öfnung, nur für eine Zahl in
-  einer Liste, die niemand liest). Die Laufzeit des laufenden Stücks kommt kostenlos aus dem
-  Spieler – die steht deshalb nur auf der Spielseite
+```
+adb push "C:\Music\2024-03 Notch 7,3 kHz" "/sdcard/Android/data/de.notchedmusic.watch/files/Music/"
+```
 
-## 5. Oberfläche – fünf Seiten, ein Ring, eine Krone
+Then click **Reload** in the app. In Android Studio you can do the same thing graphically via the window
+**Device Explorer**. The TicWatch is not a USB mass storage device and MTP is not available on Wear OS –
+later the phone app can send files via the data layer route (note the size limit).
 
-Leitplanken: 466 × 466 rund, OLED (≤ 15 % helle Pixel – messbar, siehe 8), Wischen vom linken
-Rand = zurück, eine Hand, kurze Blicke.
+Scan:
+* **A folder directly under the root = an album**, done. No album tree, no second one
+  level in the surface
+* Within an album, **recursively flat counting** is used: subfolders below do not create any
+  own albums, their files belong to the album (order: numbering, otherwise name)
+* File names like `01 - Morning.mp3` → title “Morning”, sort index 1; otherwise alphabetically
+* Files loose in the root do not go to waste: they collect in the “Root” folder
+* Ignore hidden (`.filename`); Protection against fault trees: max. 6 levels, max. 2,000
+  Files, max. 200 albums. Scan to `Dispatchers.Default`, exactly **one** pass per
+  “Reload” – when switching to the background, it never scans
+* **no** `MediaMetadataRetriever` loop (an expensive opening per file, just for a number in
+  a list that no one reads). The running time of the current piece comes free of charge
+  Players - that's why it's only on the game page
 
-**Die TicWatch 5 Pro hat genau eine Krone: sie ist gerastert drehbar und zusätzlich drückbar.**
-Daraus folgt die Bedienhierarchie – und sie ist besser als jede Touch-Geste:
+## 5. Surface - five sides, one ring, one crown
 
-| Eingabe | Auf Listen (Bibliothek, Klang, Einstellungen) | Auf der Spielseite |
+Guardrails: 466 × 466 round, OLED (≤ 15% bright pixels - measurable, see 8), swipe from the left
+Edge = back, one hand, brief glances.
+
+**The TicWatch 5 Pro has exactly one crown: it can be rotated in a grid pattern and can also be pressed.**
+This results in the operating hierarchy - and it is better than any touch gesture:
+
+| Input | On Lists (Library, Sound, Settings) | On the game page |
 |---|---|---|
-| **Krone drehen** | wie gewohnt durch die Liste scrollen (Systemverhalten, wir ändern es nicht) | **Lautstärke** (1 Raster = 1 Stufe) |
-| **Krone drücken** | Systemverhalten behalten (zurück) | unverändert lassen – nicht umbelegen |
-| Touch | tippen, ziehen, halten | wie rechts |
+| **Rotate crown** | scroll through the list as usual (system behavior, we don't change it) | **Volume** (1 grid = 1 level) |
+| **Press crown** | Keep system behavior (back) | Leave unchanged – do not reassign |
+| Touch | tap, drag, hold | like right |
 
-Eine Regel für alles: **die Krone bedient den Hauptregler der jeweiligen Seite** – auf Listen das
-Scrollen (unverändertes Systemverhalten, so bedient sich jede Wear-App), auf der Spielseite die
-Lautstärke. Dort gibt es ohnehin nichts zu scrollen, also gibt es keinen Konflikt.
+One rule for everything: **the crown operates the main controller of the respective side** – on lists that
+Scrolling (unchanged system behavior, this is how every Wear app works), on the game page
+Volume. There's nothing to scroll there anyway, so there's no conflict.
 
 > [!NOTE]
-> **Es gibt kein Vorsuchen innerhalb eines Stücks.** Sprünge sind ausschließlich Stück zurück/weiter
-> und Ordner zurück/weiter. Das erspart uns Such-Slider, Positions-Setzen, einen Umschalt-Modus für
-> den Ring – und damit einen Haufen Zustand und Rechenarbeit. Der Fortschrittsbogen wird zur reinen
-> Anzeige.
+> **There is no forward searching within a piece.** Jumps are only back/forward
+> and folder back/next. This saves us search sliders, position setting, a switching mode for
+> the ring – and with it a lot of condition and calculation work. The progress sheet becomes pure
+> Advertisement.
 
 ```mermaid
 flowchart TD
-  P["Spielen<br/>Fortschrittsbogen · Titel · Transport"] ---|Tippen oben rechts| M["Menue"]
-  P ---|Tippen auf Ordner-/Titelzeile| B["Bibliothek<br/>Ordner → Titel"]
-  B ---|Tippen auf Titel| P
-  M --- S["Klang<br/>P1 / P2 / BYP · Preset-Info · Testrauschen"]
-  M --- E["Einstellungen"]
-  E --> T["Testrauschen (nur Debug-Bau)<br/>durch die eigene Filterkette"]
+  P["Play<br/>progress arc · title · transport"] ---|Tap top right| M["Menu"]
+  P ---|Tap folder/title row| B["Library<br/>folder → title"]
+  B ---|Tap title| P
+  M --- S["Sound<br/>P1 / P2 / BYP · preset info · test noise"]
+  M --- E["Settings"]
+  E --> T["Test noise (debug build only)<br/>through the local filter chain"]
 ```
 
-### Seite „Spielen" (Startseite)
+### Play Page (Home Page)
 
 ```
-        ⌚ 10:24            ← TimeText (System, ambient-fähig)
-   [ P1 ▾ ]              ☰     ← Modus-Knopf · Menü
+        ⌚ 10:24            ← TimeText (system, ambient-capable)
+   [ P1 ▾ ]              ☰     ← mode button · menu
       ╭─────────╮
-    ╱  ●━━━━○      ╲      ← Bogen = reiner Fortschrittszeiger (nicht bedienbar)
-   │  Morgen        │         Mitte: Titel (2 Zeilen)
-    ╲ 3 · 12 / 7 · 3 ╱       darunter „Titel 3 von 12 · Ordner 3 von 7“
-      ╰─────────╯          ← Kron-Drehen hier = Lautstärke
-     ⏮      ⏯      ⏭       ← Leiste am unteren Bogen
+    ╱  ●━━━━○      ╲      ← arc = pure progress indicator (not interactive)
+   │  Morning       │         center: title (2 lines)
+    ╲ 3 · 12 / 7 · 3 ╱       below: “Title 3 of 12 · Folder 3 of 7”
+      ╰─────────╯          ← rotate crown here = volume
+     ⏮      ⏯      ⏭       ← bar at the bottom of the arc
 ```
 
-Bedienung (bewusst kurz, weil die Uhr kein Menü verzeiht):
+Service (deliberately short because the watch doesn't forgive a menu):
 
-| Geste | Wirkung |
-|---|---|
-| **Krone drehen** | **Lautstärke**, 1 Raster = 1 Stufe; kurze Einblendung `────●── 12` |
-| Bogen am Schirm **ziehen** | dasselbe, für die Hand ohne Krone |
+| gesture | Effect |
+|---|---|| **Rotate crown** | **Volume**, 1 grid = 1 level; short fade-in `────●── 12` |
+| **swipe on the arc | the same, for the hand without a crown |
 | **⏯** | Play/Pause |
-| **⏮ / ⏭** | Titel zurück / weiter (am Ordnerende weiter in den nächsten Ordner) |
-| **⏮ / ⏭ halten** | **ganzer Ordner** zurück / weiter – Einblendung „Ordner 3 von 7 · 12 Titel" |
-| **Modus-Knopf** tippen | P1 → P2 → BYP durchschalten |
-| **Modus-Knopf halten** | Bypass **nur solange gedrückt** – der A/B-Vergleich, um schnell reinzuhören |
-| Titel-/Ordnerzeile tippen | zur Bibliothek |
-| Wischen vom Rand | zurück (Menü/Bibliothek) |
+| **⏮ / ⏭** | Title back / forward (at the end of the folder continue into the next folder) |
+| **⏮ / ⏭ hold** | **whole folder** back/forward – display “Folder 3 of 7 · 12 titles” |
+| **Mode button** tap | Switch through P1 → P2 → BYP |
+| **Hold mode button** | Bypass **only pressed for as long as possible** – the A/B comparison for a quick listen |
+| Tap title/folder line | to the library |
+| Swipe from edge | back (Menu/Library) |
 
 > [!NOTE]
-> Der Bogen ist **Anzeige, kein Regler**: er zeigt, wo im Stück wir sind, und hat keine
-> Berührungsfläche. Absicht – ein Regler, der wie eine Anzeige aussieht, ist die häufigste
-> Fehlerquelle auf 466 Pixeln. Bedient wird über Knöpfe und Krone, und beide sind eindeutig.
+> The arc is **display, not a slider**: it shows where we are in the piece and has none
+> Touch surface. Intent – a knob that looks like a display is the most common
+> Source of error on 466 pixels. It is operated via buttons and crown, and both are unique.
 
 > [!TIP]
-> Kronen-Lautstärke ist auf dem **Emulator** sofort prüfbar: Simulator-Knöpfe und Mausrad liefern
-dieselben Dreh-Ereignisse. Die Einblendung zeigt die Stufe – so sieht man die Wirkung auch ohne
-> Ton, solange die Kopfhörer noch fehlen.
+> Crown volume can be checked immediately on the **emulator**: simulator buttons and mouse wheel provide
+the same shooting events. The overlay shows the level - so you can see the effect even without it
+> Sound as long as the headphones are still missing.
 
-### Seite „Bibliothek"
+### Library page
 
-Zwei Stufen, keine Baumstruktur:
+Two levels, no tree structure:
 
-1. **Ordner-Liste** – Kopf „7 Ordner · 84 Titel", pro Reihe Ordnername plus darunter klein
-   „12 Titel"; der aktuelle Ordner hat eine Akzent-Kontur. Krone scrollt, Tippen öffnet.
-2. **Titel-Liste** des Ordners – Index + Titel, das laufende Stück hervorgehoben (und
-   einautomatic-scroll zu ihm, wenn die Seite geöffnet wird). Tippen spielt ab und kehrt zu
-   „Spielen" zurück.
+1. **Folder list** – Header “7 folders · 84 titles”, folder name per row plus small underneath
+   “12 tracks”; the current folder has an accent outline. Crown scrolls, tap opens.
+2. **Title list** of the folder - index + title, the current track highlighted (and
+   anautomatic-scroll to it when the page opens). Tap plays and returns
+   "Play" back.
 
-Warum Liste *und* Knöpfe: die Knöpfe auf der Spielseite sind der schnelle eine Handgriff („nächster
-Ordner"), die Liste beantwortet die andere Frage – **welche Ordner gibt es überhaupt und wo bin
-ich gerade**. Beides zusammen ist billiger als ein Menü, das man sich merken muss.
+Why list *and* buttons: the buttons on the game page are a quick one (“next
+folder"), the list answers the other question - **which folders actually exist and where am I
+I just**. Both together are cheaper than a menu that you have to memorize.
 
-### Seite „Klang"
+### Sound page
 
-* Drei-Segment-Umschalter **P1 · P2 · BYP** (selbst gezeichnet, dunkle Füllung, Akzent-Rahmen
-  um das aktive Segment)
-* Pro Preset eine Karte: „P1 · 4 Bänder · tiefstes: Notch 7 300 Hz" plus „Bearbeiten per Smartphone"
-* **Testrauschen** – nur im Debug-Bau sichtbar (Abschnitt 7b): weisses Rauschen, durch die eigene
-  Filterkette geschickt. Damit hörst du jedes Band als „Loch“ im Rauschen, ohne Phone-App und ohne
-  Musikdatei
-* Knopf ist ein Halte-Knopf: solange gedrückt, solange rauscht es – kein eigener Zustand, keine
-  Gefahr, dass es anbleibt
+* Three-segment switcher **P1 · P2 · BYP** (self-drawn, dark fill, accent border
+  around the active segment)
+* One card per preset: "P1 · 4 bands · deepest: Notch 7 300 Hz" plus "Edit via smartphone"
+* **Test noise** – only visible in the debug build (section 7b): white noise, caused by your own
+  Filter chain sent. This means you can hear each band as a “hole” in the noise, without a phone app and without
+  Music file
+* Button is a hold button: as long as it is pressed, there is a noise - no state of its own, none
+  Danger of it staying on
 
-### Seite „Einstellungen"
+### Settings Page
 
-| Eintrag | Was dahintersteht |
+| Entry | What’s behind it |
 |---|---|
-| Bluetooth / Smartphone | Status („verbunden · letzte Übernahme 14:02"), „Übernahme jetzt", Ablehnungsgrund bei fehlerhaftem JSON |
-| Display | **Schalter: „Display wach halten beim Hören"** (`keepScreenOn`); „Abgedunkelt anzeigen" (eigene Ambient-Darstellung) |
-| Audio | **Lautstärke `volumeDb`** (unser Regler, derselbe wie auf der Spielseite), Pegel-/Limiter-
-  Anzeige mit Ein-Tipp-Vorschlag „−2 dB", Vor-Verstärkung des aktiven Presets; unten ein Hinweis auf
-  die System-Medienlautstärke der Uhr (mit Sprung dorthin) |
-| Bibliothek | Pfad (kopierbar zum Abtippen per adb), Titel-/Ordnerzahl, „Neu laden" |
-| Info | Version, letzte Filter-Benchmark, „Auf Werkeinstellungen zurück" |
+| Bluetooth / Smartphone | Status ("connected · last takeover 2:02 p.m."), "takeover now", rejection reason for incorrect JSON |
+| Display | **Switch: “Keep display awake while listening”** (`keepScreenOn`); “Show darkened” (own ambient display) |
+| Audio | **Volume `volumeDb`** (our control, the same as on the game page), level/limiter
+  Display with one-tap suggestion "−2 dB", pre-amplification of the active preset; a note below
+  the system media volume of the watch (with jump there) |
+| Library | Path (can be copied for typing via adb), title/folder number, “Reload” |
+| Info | Version, last filter benchmark, “Reset to factory settings” |
 
 > [!WARNING]
-> **Die App kann den Bildschirm-Timeout des Systems nicht setzen** – das ist eine
-> Systemeinstellung (Einstellungen → Anzeige). Was wir steuern können: `keepScreenOn` für unsere
-> Screens und eine eigene, stark abgedunkelte Ambient-Darstellung. Der Plan verspricht deshalb nur
-> die beiden Punkte, die technisch gehen, und verlinkt in den Einstellungen auf den Systemwert.
+> **The app cannot set the system screen timeout** - that's one
+> System Settings (Settings → Display). What we can control: `keepScreenOn` for ours
+> Screens and your own, heavily darkened ambient display. The plan therefore only promises> the two points that are technically possible and linked to the system value in the settings.
 
-### Weitere UI-Regeln
+### More UI rules
 
-* Ein `AppScaffold` (in der Activity), pro Screen ein `ScreenScaffold`
-* Navigation 3 mit `rememberSwipeDismissableSceneStrategy()` (Wischen = zurück, Standardgefühl)
-* Keine Flächenfarben: Füllungen nachtdunkel, Auszeichnung über helle Schrift und 1-dp-Konturen
-* Alle Werte mit Einblend-Hinweis beim ersten Mal (z. B. „Halten für Ordner"), danach nie wieder
-* Dreh-API: auf Listen das eingebaute Scrollen der `TransformingLazyColumn` (verhält sich mit der
-  Krone von allein richtig); auf der Spielseite ein eigener `ScrollableState`, der die Drehung auf
-  Lautstärke-Stufen abbildet – dort gibt es nichts zu scrollen, also keinen Konflikt
-* Keine Such-Funktion weit und breit: kein `seekTo`, kein Positions-Ziel, kein Umschalt-Modus.
+* One `AppScaffold` (in the activity), one `ScreenScaffold` per screen
+* Navigation 3 with `rememberSwipeDismissableSceneStrategy()` (swipe = back, default feel)
+* No area colors: night-dark fillings, highlighting via light font and 1 dp contours
+* All values with a pop-up hint the first time (e.g. "Hold for folder"), then never again
+* Rotation API: on lists the built-in scrolling of the `TransformingLazyColumn` (behaves with the
+  crown correct by itself); on the game page there is a separate `ScrollableState` which sets the rotation
+  Volume levels - there is nothing to scroll there, so no conflict
+* No search function far and wide: no `seekTo`, no position target, no switching mode.
 
-## 6. Was auf dem Gerät noch zu prüfen ist
+## 6. What else needs to be checked on the device
 
-| Thema | Prüfen | Wenn nein |
+| Topic | Check | If no |
 |---|---|---|
-| Kronen-Stufe passt? | 1 Raster = 1 Lautstärke-Stufe, Verhalten auf der echten Uhr | Stufen pro Raster an einer Stelle nachstellen |
-| Kronendruck = System-Zurück? | Verhalten auf der Uhr prüfen | unverändert lassen, nicht umbelegen |
-| A2DP-Codec mit der Amiron 3000 | Entwickleroptionen → Bluetooth-Audio-Codec | – (Koeffizienten werden je Sample-Rate neu berechnet, also egal) |
-| 6 Bänder unter Last | 30 min Wiedergabe, `dumpsys cpuinfo`, Hörtest auf Aussetzer | Bänder intern in Blöcke rechnen; Q weiter begrenzen |
-| Speicher der App | `dumpsys meminfo` nach 30 min: Heap darf nicht wachsen (Leck-Schutz) | Allokationsstellen im Audio-Pfad suchen |
-| Akku | 60 min Wiedergabe mit/ohne „wach halten", `dumpsys batterystats` | Ambient-Darstellung härtender machen |
+| Crown level fits? | 1 grid = 1 volume level, behavior on the real watch | Recreate steps in one place per grid |
+| Crown pressure = system back? | Check behavior on the watch | leave unchanged, do not reassign |
+| A2DP codec with the Amiron 3000 | Developer Options → Bluetooth Audio Codec | – (Coefficients are recalculated per sample rate, so it doesn’t matter) |
+| 6 bands under load | 30 min playback, `dumpsys cpuinfo`, listening test for dropouts | Internally calculate tapes into blocks; continue to limit Q |
+| App storage | `dumpsys meminfo` after 30 min: Heap is not allowed to grow (leak protection) | Find allocation points in the audio path |
+| Battery | 60 min playback with/without “keep awake”, `dumpsys batterystats` | Making Ambient Presentation Harder |
 
-## 7. Dateien im Überblick
+## 7. Files at a glance
 
-**dsp/** (reine Mathematik, keine Android-Typen)
-* `EffectBand.kt` **[neu]** – Filtertyp-Aufzählung, Band, Grenzen, Validierung, `maxBands = 6`
-* `FilterPreset.kt` **[ändern]** – Format version 2 wie oben, ohne `bypass`
-* `Biquad.kt` **[ändern]** – 4 Typen, Koeffizienten paarweise (alt → neu) für Überblendung
-* `EffectChain.kt` **[neu, ersetzt `NotchFilterChain.kt`]** – Biquads pro Kanal, Überblend-Fenster,
-  Vor-Verstärkung, Limiter, fester Arbeitspuffer
-* `Limiter.kt` **[neu]** – keine Lautstärke-Stufe: die übernimmt die Uhr (Abschnitt 1)
-* `Pcm.kt` **[ändern]** – Runden, keine Zwischen-Arrays
-* `EffectAudioProcessor.kt` / `EffectAudioProcessorChain.kt` **[umbenannt, geändert]** –
-  `@Volatile preset`, `@Volatile volumeDb`, Arbeitspuffer, Neu-Konfiguration bei Sample-Raten-Wechsel
+**dsp/** (pure mathematics, no Android types)
+* `EffectBand.kt` **[new]** - Filter type enumeration, band, limits, validation, `maxBands = 6`
+* `FilterPreset.kt` **[change]** - Format version 2 as above, without `bypass`
+* `Biquad.kt` **[change]** - 4 types, coefficients in pairs (old → new) for blending
+* `EffectChain.kt` **[new, replaces `NotchFilterChain.kt`]** - Biquads per channel, crossfade window,
+  Pre-gain, limiter, fixed working buffer
+* `Limiter.kt` **[new]** – no volume level: the watch takes care of it (section 1)
+* `Pcm.kt` **[change]** - Rounds, not intermediate arrays
+* `EffectAudioProcessor.kt` / `EffectAudioProcessorChain.kt` **[renamed, changed]** –
+  `@Volatile preset`, `@Volatile volumeDb`, working buffer, reconfiguration when sample rate changes
 
 **playback/**
-* `FilterMode.kt` **[neu]**, `SettingsRepository.kt` **[neu, DataStore]**,
-  `FilterSettings.kt` **[ändern]**, `PlaybackService.kt` **[ändern]** (Klangzustand → Prozessor,
-  Abmelden wenn nichts spielt), `PlaybackController.kt` **[ändern]** (`volumeDb` setzen/lesen über
-  den Klangzustand – **nicht** über `AudioManager`; Titel/Ordner überspringen anhand der
-  Album-Grenzen; **kein** `seekTo`)
+* `FilterMode.kt` **[new]**, `SettingsRepository.kt` **[new, DataStore]**,
+  `FilterSettings.kt` **[change]**, `PlaybackService.kt` **[change]** (sound state → processor,
+  Log out if nothing is playing), `PlaybackController.kt` **[change]** (set/read `volumeDb` via
+  the sound state – **not** via `AudioManager`; Skip tracks/folders using the
+  album boundaries; **no** `seekTo`)
 
 **data/**
-* `MusicLibrary.kt` **[ändern]** – rekursiv, `Album(name, path, tracks)`, Nummerierung, Obergrenzen
+* `MusicLibrary.kt` **[change]** - recursive, `Album(name, path, tracks)`, numbering, upper bounds
 
 **ui/**
-* `Navigation.kt`, `NavKeys.kt` **[neu]**
+* `Navigation.kt`, `NavKeys.kt` **[new]**
 * `screen/PlayerScreen.kt`, `screen/LibraryScreen.kt`, `screen/SoundScreen.kt`,
-  `screen/SettingsScreen.kt`, `screen/MenuScreen.kt` **[neu]**; `MainScreen.kt` **[entfällt]**
-* `components/ProgressArc.kt` (reine Anzeige, nicht bedienbar), `VolumeOverlay.kt` (Kurzanzeige der
-  `volumeDb`-Stufe beim Kronendrehen), `LevelMeter.kt` (Pegelanzeige + Ein-Tipp „−2 dB" bei
-  Dauer-Limitieren), `ModeSwitch.kt`, `TransportRow.kt`, `InfoChip.kt`, `HintHud.kt` **[neu]**
-* `debug/NoiseSource.kt` **[neu, Debug-Quelle]** – weisses Rauschen als `MediaSource`, läuft durch
-  denselben Pfad wie Musik (Decoder → EQ → Limiter) statt an der Kette vorbei
-* `theme/Theme.kt` **[ändern]** – OLED-Kontur-Farben, Formen; Screenshots als Regression
+  `screen/SettingsScreen.kt`, `screen/MenuScreen.kt` **[new]**; `MainScreen.kt` **[omitted]**
+* `components/ProgressArc.kt` (pure display, not usable), `VolumeOverlay.kt` (short display of the
+  `volumeDb` level when turning the crown), `LevelMeter.kt` (level display + one-tap "−2 dB" atduration limit), `ModeSwitch.kt`, `TransportRow.kt`, `InfoChip.kt`, `HintHud.kt` **[new]**
+* `debug/NoiseSource.kt` **[new, debug source]** - white noise as `MediaSource`, runs through
+  the same path as music (decoder → EQ → limiter) instead of going past the chain
+* `theme/Theme.kt` **[change]** - OLED outline colors, shapes; Screenshots as regression
 
-**Tests** (JVM, laufen auf dem PC)
-* `BiquadResponseTest` – alle 4 Typen: Plateau-Gewinn, Mittenfrequenz auf 1 Hz genau, Q ↔ Breite
-* `BandStackingTest` – 6 Bänder derselben Frequenz addieren sich wie erwartet; `enabled` schaltet
-  einzeln; Reihenfolge-Austausch ändert die Summenwirkung nicht (Unabhängigkeit)
-* `CoefficientSmoothingTest` – Preset-Wechsel mitten im Signal erzeugt keinen Abtast-Sprung > Schwelle
-* `RingingTest` – Impulsantwort klingt mit `Q/(π·f₀)` ab, wächst nie, kein `NaN`/`Inf`
-* `LimiterTest` – keine Übersteuerung bei 6 × +24 dB, Angriff/Erholung ohne Klickgeräusch
-* `EffectChainBenchmark` **[ersetzt DspBenchmarkTest]** – 6 Bänder gemischt, stereo, 48 kHz:
-  Mittelwert **< 15 ns/Sample** *und* schlechtester Einzel-Puffer < 1 ms (fängt Neu-Berechnungs-Spitzen ab)
-* `AlbumScanTest` – ein Ordner = ein Album, tiefere Unterordner zählen zum Album, lose Dateien im
-  Wurzel-Ordner, Nummerierung, versteckte Dateien, Obergrenzen
-* `AudioStatePersistenceTest` – Modus/Preset/Lautstärke überleben „Neustart" (Rundlauf durchs JSON)
-* `OledPixelBudgetTest` **[Geräte-Test]** – jeder Screen: helle Pixel im runden Schirm ≤ 15 %
-* `NoiseSpectrumTest` – Rauschen durch die Kette: mit aktivem Notch messbar weniger Energie im
-  Band als ohne (der Hörtest hat damit auch einen Zahlenbeweis)
+**Tests** (JVM, run on PC)
+* `BiquadResponseTest` - all 4 types: plateau gain, center frequency accurate to 1 Hz, Q ↔ width
+* `BandStackingTest` - 6 bands of the same frequency add up as expected; `enabled` switches
+  individually; Sequence exchange does not change the cumulative effect (independence)
+* `CoefficientSmoothingTest` – preset change in the middle of the signal does not produce a sample jump > threshold
+* `RingingTest` - impulse response decays with `Q/(π·f₀)`, never grows, no `NaN`/`Inf`
+* `LimiterTest` - no clipping at 6 × +24 dB, attack/recovery without clicking noise
+* `EffectChainBenchmark` **[replaces DspBenchmarkTest]** – 6 bands mixed, stereo, 48 kHz:
+  Average **< 15 ns/sample** *and* worst single buffer < 1 ms (captures recalculation peaks)
+* `AlbumScanTest` – a folder = an album, deeper subfolders count as the album, loose files in
+  Root folders, numbering, hidden files, upper limits
+* `AudioStatePersistenceTest` – mode/preset/volume survive “restart” (round trip through JSON)
+* `OledPixelBudgetTest` **[Device test]** – every screen: bright pixels in the round screen ≤ 15%
+* `NoiseSpectrumTest` – noise through the chain: with active notch measurably less energy in the
+  Band than without (the listening test also has numerical proof)
 
-## 7b. Debug-only-Werkzeuge – historischer Entwurf, inzwischen gestrichen
+##7b. Debug-only tools – historical draft, now deleted
 
-> Dieser Abschnitt beschreibt den früheren Plan. Das Testrauschen samt `diagnose/`-Quellen und
-> `NoiseWavTest` wurde entfernt; die App enthält keine Debug-Rauschwerkzeuge mehr.
+> This section describes the previous plan. The test noise including `diagnosis/` sources and
+> `NoiseWavTest` has been removed; the app no ​​longer includes debug noise tools.
 
-Der Wunsch „nur, solange wir testen“ braucht eine technische Grenze, die nicht beim Menschen liegt.
-Deshalb drei Schichten, von billig bis wasserdicht:
+The desire “only as long as we test” requires a technical limit that does not lie with humans.
+Therefore three layers, from cheap to waterproof:
 
-| Schicht | Umsetzung | Wirkung |
+| layer | Implementation | Effect |
 |---|---|---|
-| 1. Quelle | Code in `app/src/debug/kotlin/…` statt `main/` | existiert im Release-Bau **nicht** – der Compiler kennt die Klassen schlicht nicht |
-| 2. Zugriff | Interface (z. B. `DiagnoseWerkzeuge`) in `main/`, Implementation nur in `debug/`; App-Start reicht je nach Bauvariante die echte oder eine Leer-Implementierung durch | UI-Code bleibt in beiden Bauen übersetzbar, Release bekommt die leere Variante |
-| 3. Anzeige | `BuildConfig.DEBUG` steuert den Knopf auf der Seite „Klang“ | im Release-Bau ist der Eintrag unsichtbar |
+| 1. Source | Code in `app/src/debug/kotlin/…` instead of `main/` | does not exist in the release build - the compiler simply does not know the classes |
+| 2. Access | Interface (e.g. `DiagnosticTools`) in `main/`, implementation only in `debug/`; Depending on the construction variant, the app starts with the real or an empty implementation through | UI code remains translatable in both builds, release gets the empty variant |
+| 3. Advertisement | `BuildConfig.DEBUG` controls the button on the Sound page | in the release build the entry is invisible |
 
-Dafür nötig: `buildConfig = true` im `buildFeatures`-Block. Bei AGP 9 ist diese Funktion
-**standardmäßig aus** und steht bei uns aktuell auf `false`; erst mit `true` entsteht die Klasse
-`BuildConfig` mit ihrem Feld `DEBUG` (AGP-9-Doku bestätigt genau diesen Weg). Eigene Felder würden
-über das neue `BuildConfigField`-API eingetragen – brauchen wir hier nicht.
+Required: `buildConfig = true` in the `buildFeatures` block. This function is available in AGP 9
+**off by default** and is currently set to `false`; The class is only created with `true`
+`BuildConfig` with its `DEBUG` field (AGP-9 documentation confirms exactly this way). Own fields would
+entered via the new `BuildConfigField` API - we don't need it here.
 
-**Was in diese Schicht gehört:** das Testrauschen – und künftig alles andere, was nur dem
-Nachmessen dient (Pegel-Kurvenausgabe, erzwungener Sample-Raten-Wechsel zum Prüfen der
-Neu-Berechnung, Preset-Ablehnungs-Protokoll). Der reguläre Weg bleibt davon unberührt.
+**What belongs in this layer:** the test noise - and in the future everything else that is just that
+Re-measurement is used (level curve output, forced sample rate change to check the
+recalculation, preset rejection protocol). The regular route remains unaffected.
 
 > [!IMPORTANT]
-> **Das Rauschen läuft durch dieselbe Kette wie die Musik** – als eigene `MediaSource` im
-> Dienst, nicht als separater Tonpfad. Würde man es an der Filterkette vorbei direkt auf die
-> Audio-Ausgabe legen, wäre der Hörtest wertlos: man hörte dann das Rauschen unverändert.
+> **The noise runs through the same chain as the music** - as its own `MediaSource` in the
+> service, not as a separate audio path. If you pass it past the filter chain and directly onto it> audio output, the listening test would be worthless: you would then hear the noise unchanged.
 
 > [!TIP]
-> Rauschen statt Sinus-Kehre ist für Notche die bessere Wahl: weisses Rauschen enthält alle
-> Frequenzen gleichzeitig, jedes aktive Band zeigt sich als „Loch“ – und bei sechs Bändern sieht
-> und hört man alle auf einmal, statt sie nacheinander abzufahren.
+> Noise instead of sine curve is the better choice for notche: white noise contains all of them
+> Frequencies at the same time, each active band appears as a “hole” – and with six bands
+> and you can hear them all at once instead of going through them one after the other.
 
-## 8. Reihenfolge der Umsetzung
+## 8. Order of implementation
 
-| # | Schritt | Ergebnis / Beweis |
+| # | step | Result/Proof |
 |---|---|---|
-| **A** | DSP-Ausbau: 4 Filtertypen, Q, Gain, `enabled`, 6 Bänder, Überblendung, Limiter, Runden | alle DSP-Tests grün, Benchmark unter Grenze, **kein UI touched** |
-| **B** | Bibliothek: ein Ordner = ein Album, Unterordner flachgezählt + Tests | Ordner-Struktur auf dem Emulator sichtbar |
-| **C** | DataStore, `FilterMode`, Verdrahtung bis in den Dienst | Umschalten P1/P2/BYP ändert hörbar/denkbar den Klang, überlebt Neustart |
-| **D** | Navigation + fünf Screens, Krone = Lautstärke, Transport inkl. Ordner-Sprung | vollständige Bedienung mit einer Hand, OLED-Budget-Test grün |
-| **E** | Einstellungen (wach halten, Bibliotheks-Pfad), Preset-Import per Datei (`adb push`),
-  Testrauschen im Debug-Bau | Presets sind ohne Phone-App erstellbar; A/B-Vergleich und Hörtest
-  des EQs nutzbar |
-| **F** | Phone-Schnittstelle vorbereiten (Zuhörer + Fähigkeit + JSON-Übernahme) und auf der echten Uhr messen (Codec, Akku, Last) | Protokoll steht, Messwerte dokumentiert |
+| **A** | DSP expansion: 4 filter types, Q, gain, 'enabled', 6 bands, crossfade, limiter, rounding | all DSP tests green, benchmark below limit, **no UI touched** |
+| **B** | Library: one folder = one album, subfolders flat counted + tests | Folder structure visible on the emulator |
+| **C** | DataStore, `FilterMode`, wiring up to the service | Switching P1/P2/BYP audibly/conceivably changes the sound, survives reboot |
+| **D** | Navigation + five screens, crown = volume, transport including folder jump | complete operation with one hand, OLED budget test green |
+| **E** | Settings (keep awake, library path), preset import via file (`adb push`),
+  Test noise in debug build | Presets can be created without a phone app; A/B comparison and listening test
+  of the EQ can be used |
+| **F** | Prepare phone interface (listener + capability + JSON adoption) and measure on the real watch (codec, battery, load) | Protocol is in place, measured values ​​documented |
 
 > [!TIP]
-> Schritt A ist absichtlich zuerst und allein: Die Filter-Mathematik lässt sich auf dem PC
-> nachrechnen (Frequenzgang, Abklingzeit, no-click) – präziser als Hören. Wenn A steht, sind B–F
-> Mechanik.
+> Step A is intentionally first and alone: The filter math can be done on the PC
+> recalculate (frequency response, decay time, no-click) – more precise than listening. Once A is established, B–F are mechanics.
 
-### Ressourcen-Haushalt – die festen Zusagen
+### Resource budget – the firm commitments
 
-Kein „später mal optimieren", sondern Kriterien, an denen jeder Schritt als fertig gilt:
+No “optimize it later”, but rather criteria according to which each step is considered finished:
 
-| Bereich | Zusage | Wie geprüft |
+| Area | Commitment | As tested |
 |---|---|---|
-| CPU im Audio-Pfad | 6 Bänder stereo **< 15 ns/Sample** (≈ 0,09 % eines Kerns), schlechtester Einzel-Puffer **< 1 ms** | `EffectChainBenchmark` bei jedem Build |
-| Allokation | **null** Objekt-Neubau pro Audio-Puffer: fester Arbeitspuffer, keine Zwischen-Arrays, keine Boxing in der Schleife | Benchmark auf Allocation-Zähler + Code-Inspektion |
-| Speicher | stabile Heap-Größe bei Dauerbetrieb (größenordnungsabhängig nur von der Bibliothek) | `dumpsys meminfo` vor/nach 30 min |
-| Speicher Bibliothek | Listen-Modelle enthalten nur Name + Pfad (kein Dateiobjekt, kein Metadaten-Objekt) – 2 000 Titel bleiben im einstelligen MB-Bereich | `AlbumScanTest` mit künstlich großer Liste |
-| Dateien/Speicher-Lesezugriffe | genau **ein** Verzeichnis-Durchlauf pro „Neu laden", keine Metadaten-Schleife, kein Scan beim App-Start in den Hintergrund | Zähler im Scan-Test |
-| Wachmach-Timer | Anzeige-Ticker **nur** bei `isPlaying` **und** nur wenn eine UI verbunden ist; kein Ticker, wenn nichts läuft | vorhandener Ticker + neuer Test auf Abmelden |
-| Komposition | Wiedergabe-Zustand landet in einem `StateFlow`, nur betroffene Composables recomponieren (kein „ganze Seite malt neu" pro Sekunde) | Recomposition-Zähler im Geräte-Test |
-| Wakelocks / Dienste | nur der eine legitime Vordergrund-Dienst; beim Stop wird freigegeben und der Dienst endet | `dumpsys activity services` |
-| Display | ≤ 15 % helle Pixel, keine Dauer-Animationen, keine Fortschritts-Ringe mit Sekundentakt | `OledPixelBudgetTest` |
+| CPU in audio path | 6 bands stereo **< 15 ns/sample** (≈ 0.09% of a core), worst single buffer **< 1 ms** | `EffectChainBenchmark` on every build |
+| Allocation | **null** New object construction per audio buffer: fixed working buffer, no intermediate arrays, no boxing in the loop | Benchmark on Allocation Counter + Code Inspection |
+| Storage | stable heap size during continuous operation (size dependent only on the library) | `dumpsys meminfo` before/after 30 min |
+| Storage Library | List models only contain name + path (no file object, no metadata object) - 2,000 titles remain in the single-digit MB range | `AlbumScanTest` with artificially large list |
+| Files/Storage Reads | exactly **one** directory pass per “reload”, no metadata loop, no scanning to the background on app start | Counters in scan test |
+| Wake-up timer | Display ticker **only** when `isPlaying` **and** only when a UI is connected; no ticker if nothing is running | existing ticker + new test for unsubscribe |
+| Composition | Playback state ends up in a `StateFlow`, only affected composables recompose (no "whole page repaints" per second) | Recomposition counter in the device test |
+| Wakelocks / Services | only the one legitimate foreground service; at stop is released and the service ends | `dumpsys activity services` |
+| Display | ≤ 15% bright pixels, no continuous animations, no progress rings every second | `OledPixelBudgetTest` |
 
 > [!IMPORTANT]
-> Größter Hebel bleibt trotzdem der Bildschirm, nicht die Rechenarbeit: Der Filter braucht für eine
-> Sekunde Musik unter einer halben Millisekunde CPU. Eine helle Bildschirm-Sekunde kostet ein
-> Vielfaches davon. Deshalb sind „Wach-Verhalten" und dunkle Oberfläche im Plan wichtiger
-> eingeplant als jede Mikro-Optimierung der Filterrechnung.
+> The biggest lever is still the screen, not the calculation work: the filter needs one> Second of music under half a millisecond CPU. A bright screen second costs one
+> Multiples of this. That's why "awake behavior" and dark surfaces are more important in the plan
+> planned as every micro-optimization of the filter calculation.
 
-## 9. Bewusst anders als die Anfrage
+## 9. Deliberately different from the request
 
-| Anfrage | Plan | Grund |
+| request | Plan | reason |
 |---|---|---|
-| Q frei wählbar | Q bis 30 | darüber schmiert der Notch hörbar ab (Abschnitt 2) |
-| „Screentime einstellen" | `keepScreenOn` + eigene Ambient-Darstellung | System-Timeout ist für Apps gesperrt |
-| „Ordner weiter/zurück" als einzige Ordnerwahl | zusätzlich Ordner-Liste | Liste zeigt, *welche* Ordner es gibt und wo man gerade ist – die Anfrage wollte genau das |
-| Unterordner als eigene Alben | **ein** Ordner unter der Wurzel = ein Album, tiefere Unterordner zählen dazu | flache Liste ist auf der Uhr schneller zu bedienen; genau so gewünscht |
-| Vorsuchen im Stück | **keine** Suche, nur Titel- und Ordnersprung | gewünscht; spart `seekTo`, Such-Slider, Ring-Umschaltung und deren Zustand |
-| Presets auf der Uhr bearbeiten | lesen auf der Uhr, bearbeiten am Telefon | 4 Werte × 6 Bänder per Drehring ist Qual; Import-Datei überbrückt bis zur Phone-App |
-| Lautstärke nur über das System | **eigene `volumeDb` in der App** (Kron-Drehen), System-Lautstärke bleibt zusätzlich da | nur ein Regler *vor* der Wandlung auf 16 Bit kann Übersteuerung verhindern; die eigene Stufe ist unabhängig von System und Kopfhörer und überlebt den Gerätewechsel |
-| eigener Gain-Wert im Preset | Preset enthält nur `preGainDb`; der Hörpegel liegt auf der Uhr | sonst würde ein Preset vom Telefon heimlich die Lautstärke des Nutzers verstellen |
+| Q freely selectable | Q to 30 | Above this the notch audibly smears (section 2) |
+| “Set screen time” | `keepScreenOn` + own ambient display | System timeout is blocked for apps |
+| “Folder forward/backward” as the only folder choice | additional folder list | List shows *which* folders there are and where you are currently - that's exactly what the request wanted
+| Subfolders as separate albums | **a** folder under the root = an album, including deeper subfolders | flat list is quicker to use on the watch; exactly as desired |
+| Search in the piece | **no** search, just title and folder jump | desired; desired saves `seekTo`, search slider, ring switching and their state |
+| Edit presets on the watch | read on the watch, edit on the phone | 4 values ​​× 6 bands per rotating ring is torture; Import file bridges to the phone app |
+| Volume only via the system | **own `volumeDb` in the app** (crown turning), system volume also remains there | only a control *before* the conversion to 16 bits can prevent overdriving; your own level is independent of the system and headphones and survives device changes |
+| own gain value in the preset | Preset contains only `preGainDb`; the hearing level is on the watch | otherwise a preset from the phone would secretly adjust the user's volume |
 
-## 10. Was gleich bleibt
+## 10. What stays the same
 
-Wiedergabe im Dienst, Hintergrund-Betrieb, 16-Bit-PCM-Pfad, kein Netzwerk, kein Offload (Filter ist
-Dauerzustand), dunkles Farbschema, App läuft autark ohne Phone-App.
+Playback on service, background operation, 16-bit PCM path, no network, no offload (filter is
+Permanent state), dark color scheme, app runs independently without a phone app.
 
-## 11. Offene Fragen
+## 11. Open questions
 
-1. ~~Drehgeber~~ **geklärt:** eine gerastert drehbare, drückbare Krone. Drehen ist primäre
-   Bedienung (Listen: natives Scrollen; Spielseite: Lautstärke in Stufen), Drücken bleibt
-   Systemverhalten.
-2. ~~Spieldauer~~ **im Sinn der Ressourcen-Vorgabe entschieden:** in den Listen keine Spieldauer
-   (sonst pro Datei eine Metadaten-Öffnung). Die aktuelle Laufzeit kommt kostenlos aus dem Spieler-
-   zustand und steht nur auf der Spielseite.
-3. ~~Testton~~ **geklärt und geändert:** kein Sinus-Keherton, sondern **Testrauschen**, und nur im
-   Debug-Bau (Abschnitt 7b).
-4. **Alben-Granularität:** Unterordner direkt unter der Wurzel als Album (geplant), oder der
-   komplette Pfad als Album-Name (`Klassik/2019/…`)?
-5. ~~Presets stapeln?~~ **geklärt:** immer genau ein Preset wirksam, P1 und P2 nicht gestapelt.
-   Ablage erfolgt bereits als Sammlung, damit ein drittes Preset später kein Umbau ist.
-6. **Neu, durch die Latenz-Aussage entschieden:** Die Krone steuert Suche in **5-Sekunden-** und
-   Lautstärke in **1-dB-Schritten** pro Raster. Andere Schrittweiten? (Einzig die Zahl in
-   `RotarySensitivity`, kein Umbau.)
+1. ~~Rotary encoder~~ **clarified:** a gridded, rotatable, pressable crown. Turning is primary
+   Operation (lists: native scrolling; game page: volume in steps), pressing remains
+   System behavior.
+2. ~~Playing time~~ **decided in terms of resource requirements:** no playing time in the lists
+   (otherwise one metadata opening per file). The current term comes free of charge from the player
+   condition and is only available on the game page.
+3. ~~Test tone~~ **clarified and changed:** no sine-wave tone, but **test noise**, and only in
+   Debug build (Section 7b).
+4. **Album Granularity:** Subfolders directly under the root as album (planned), or the
+   complete path as album name (`Klassik/2019/…`)?
+5. ~~Stack presets?~~ **clarified:** exactly one preset is always effective, P1 and P2 are not stacked.
+   The file is already stored as a collection so that a third preset is not a conversion later.
+6. **New, decided by the latency statement:** The crown controls search in **5 seconds** and
+   Volume in **1 dB increments** per grid. Other increments? (Only the number in
+   `RotarySensitivity`, no conversion.)
 
 ---
 
-## 12. Umsetzungsstand 13.11.2026 (Revision)
+## 12. Implementation status November 13, 2026 (revision)
 
-Dieses Dokument ist der ursprüngliche Entwurf; umgesetzt ist inzwischen ein gemeinsamer Stand mit
-der Phone-App. Verbindlich ist `PROJEKTSTATUS.md`.
+This document is the original draft; A common status has now been implemented
+the phone app. `PROJECT_STATUS.md` is binding.
 
-### Was sich gegenüber dem Entwurf geändert hat
+### What has changed from the draft
 
-| Punkt | Entwurf | Umsetzung |
+| point | Draft | Implementation |
 |---|---|---|
-| Presets | P1 · P2 · Bypass | **Aus · P1 · P2 · P3**; immer genau ein Zustand, nie gestapelt |
-| Filtertypen | 4 (Shelf/Peak/Notch) | **7**: `OFF`, `NOTCH`, `PEAKING`, `LOW_SHELF`, `HIGH_SHELF`, `LOW_CUT`, `HIGH_CUT` |
-| Preset-Pflege | Datei-Import, später Phone | **nur Phone**; die Uhr hat keinen Band-Editor |
-| Phone-Anbindung | Zuhörer vorbereitet | **echter Data-Layer-Sync** mit Capability, ACK, Manifest, Assets und Commit |
-| Musik-Sync | additiv/überschreibend | **Spiegel**: nicht ausgewählte Titel werden erst nach bestätigtem Commit gelöscht |
-| Bibliothek | fünf Seiten, Menü | Navigation 3: **Alben · Titel · Spieler · EQ · Einstellungen**; keine Cover |
-| Lautstärke | App-eigenes `volumeDb` | bleibt; Krone/Touch steuern sie, Preset-Sync verstellt sie nie |
-| Testrauschen | Debug-Bau geplant | **gestrichen** – Debug-Werkzeuge und -Test entfernt; keine Rauschdatei in der App |
+| Presets | P1 · P2 · Bypass | **Off · P1 · P2 · P3**; always exactly one state, never stacked || Filter Types | 4 (Shelf/Peak/Notch) | **7**: `OFF`, `NOTCH`, `PEAKING`, `LOW_SHELF`, `HIGH_SHELF`, `LOW_CUT`, `HIGH_CUT` |
+| Preset maintenance | File import, later Phone | **phone only**; the watch does not have a band editor |
+| Phone connection | Listeners prepared | **real data layer sync** with capability, ACK, manifest, assets and commit |
+| Music Sync | additive/overwriting | **Mirror**: unselected titles will only be deleted after a confirmed commit |
+| Library | five pages, menu | Navigation 3: **Albums · Titles · Players · EQ · Settings**; no covers |
+| Volume | App-own `volumeDb` | remains; Crown/touch controls them, preset sync never adjusts them |
+| Test noise | Debug build planned | **deleted** – debug tools and test removed; no noise file in the app |
 
-### Verifizierte Geräteabnahme
+### Verified device acceptance
 
-* **Pixel 10 ↔ TicWatch Pro 5, echte Geräte:** Presets (P1/P2/P3) kamen an und wurden bestätigt;
-  Musik (2 MP3s, 396 KB) wurde gespiegelt und commit-bestätigt; eine Spiegel-Löschung entfernte
-  den nicht ausgewählten Titel auf der Uhr.
-* **Build/Test:** `app:assembleDebug` grün, **139/139 JVM-Tests**, `app:lintDebug` 0 Fehler;
-  Benchmark **11–14 ns/Sample**, schlechtester Puffer **< 0,1 ms** (host-lastabhängig; letzter
-  Einzellauf 11,054 ns / 0,097 ms).
-* **Besonderheiten, die beim nächsten Mal Zeit sparen:** DataItems `setUrgent()`; Assets über den
-  Play-Services-Digest (`audio_digest`, Base64-SHA-1) adressieren; `applicationId` beider APKs ist
-  `de.notchedmusic.phone`; die Watch-Empfänger sind im Manifest `enabled="false"` und werden von
-  `SyncEmpfang` nur bei offener App bzw. laufenden Daten geöffnet (90 s Nachlauf) – ein Schub vom
-  Phone braucht damit die geöffnete Uhr-App; Empfänger synchron im Callback verarbeiten und im app-weiten Scope
-  halten.
+* **Pixel 10 ↔ TicWatch Pro 5, real devices:** Presets (P1/P2/P3) arrived and were confirmed;
+  Music (2 MP3s, 396 KB) was mirrored and committed; a mirror delete removed
+  the unselected track on the watch.
+* **Build/Test:** `app:assembleDebug` green, **139/139 JVM tests**, `app:lintDebug` 0 errors;
+  Benchmark **11-14 ns/sample**, worst buffer **< 0.1 ms** (host load dependent; last
+  Single run 11.054 ns / 0.097 ms).
+* **Special features that will save time next time:** DataItems `setUrgent()`; Assets about the
+  address Play-Services-Digest (`audio_digest`, Base64-SHA-1); `applicationId` of both APKs is
+  `de.notchedmusic.phone`; the watch receivers are `enabled="false"` in the manifest and are controlled by
+  `SyncReceipt` only opened when the app is open or data is running (90 s delay) - a boost from
+  The phone needs the watch app to be open; Process recipients synchronously in the callback and in the app-wide scope
+  hold.
 
-### Noch offen
+### Still open
 
-* Instrumentierte Compose-/UI-Tests; 10-Dateien-Lauf, große Datei, Abort **mitten im Upload**,
-  Speicherknappheit und ungültiges Preset als reale E2E-Fälle; 30-Minuten-A2DP- und
-  OLED-Messung auf der Uhr und das App-Icon; das persönliche Release ist gebaut und installiert.
+* Instrumented Compose/UI testing; 10 file run, large file, abort **mid-upload**,
+  Memory shortage and invalid preset as real E2E cases; 30 minute A2DP and
+  OLED measurement on the watch and the app icon; the personal release is built and installed.

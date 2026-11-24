@@ -193,9 +193,10 @@ Expected behaviour:
 - the media notification persists while playback is active;
 - unplugging headphones/Bluetooth is handled by `setHandleAudioBecomingNoisy(true)`.
 
-If playback stops after a call or screen lock, update to the current release build and restart the
-app while the device is unlocked. Installing an app while the phone is locked can block the initial
-service start.
+If playback stops after a call or screen lock, use the current release build (1.0.1 or newer).
+The app now re-starts the playback service when it becomes visible and before playback. Starting an
+older build while the phone is locked could block the initial service start and leave playback
+running without a foreground service.
 
 ## 8. Troubleshooting
 

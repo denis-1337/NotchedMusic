@@ -84,9 +84,9 @@ media are never uploaded.
 Project-specific technical logs are kept in the two project folders:
 
 - `NotchedMusic-Phone/README.md`
-- `NotchedMusic-Phone/projectstatus.md`
+- `NotchedMusic-Phone/PROJECT_STATUS.md`
 - `NotchedMusic-Watch/README.md`
-- `NotchedMusic-Watch/PROJEKTSTATUS.md`
+- `NotchedMusic-Watch/PROJECT_STATUS.md`
 
 ## Quick start
 
