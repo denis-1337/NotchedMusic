@@ -11,7 +11,6 @@ real-time DSP and local statistics.
 | `NotchedMusic-Phone/core` | Pure JVM model, DSP and sync protocol; testable without Android |
 | `NotchedMusic-Phone/app` | Android UI, SAF library, playback pipeline, sync transport, statistics |
 | `NotchedMusic-Watch/app` | Wear OS UI, local playback, watch DSP, statistics, Wear receivers |
-| `eq_mediaplayer` | Original requirements, planning notes and GUI mockups |
 
 ## Phone playback pipeline
 

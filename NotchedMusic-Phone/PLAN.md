@@ -13,7 +13,6 @@
 | | |
 |---|---|
 | Project folder | `Z:\android_projects\NotchedMusic\NotchedMusic-Phone` |
-| Mockups | `Z:\android_projects\NotchedMusic\eq_mediaplayer\Screenshot *.png` |
 | Target device | Google Pixel 10, Android 17 (API 37) |
 | App package | `de.notchedmusic.phone` |
 | Project name | `NotchedMusicPhone` |

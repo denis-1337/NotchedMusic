@@ -54,7 +54,6 @@ without the smartphone nearby.
 |---|---|
 | `NotchedMusic-Phone/` | Phone app, shared `:core` JVM module, DSP, sync protocol and tests |
 | `NotchedMusic-Watch/` | Wear OS app, watch DSP, local statistics and Wear Data Layer receivers |
-| `eq_mediaplayer/` | Original requirements, planning notes and GUI mockups |
 | `docs/` | English build, help and architecture documentation |
 
 ## Downloads and releases
