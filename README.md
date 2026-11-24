@@ -57,11 +57,28 @@ without the smartphone nearby.
 | `eq_mediaplayer/` | Original requirements, planning notes and GUI mockups |
 | `docs/` | English build, help and architecture documentation |
 
+## Downloads and releases
+
+Ready-to-install signed APKs are attached to the repository releases, so no development setup is
+required:
+
+- [**NotchedMusic v1.0 release**](https://github.com/denis-1337/NotchedMusic/releases/tag/v1.0)
+  — phone APK, watch APK and SHA-256 checksums.
+
+Download the APK for the phone and the APK for the watch and install them with Android's package
+installer. The watch app is a standalone player with its own real-time notch filtering; it does not
+need the phone nearby for playback. A release also includes the current compiled APK binaries for
+users who do not work with Android Studio or Gradle.
+
+The release is private together with the repository. Signing keys, build outputs and local test
+media are never uploaded.
+
 ## Documentation
 
 - [**Help — using NotchedMusic**](docs/HELP.md): first setup, playback, EQ, watch sync,
   statistics and troubleshooting.
 - [**Build and deployment**](docs/BUILD.md): local build, tests, signing and device installation.
+- [**Releases and APK downloads**](docs/RELEASES.md): signed APK assets and normal installation.
 - [**Architecture**](docs/ARCHITECTURE.md): modules, data flow, sync protocol and persistence.
 
 Project-specific technical logs are kept in the two project folders:
