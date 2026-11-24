@@ -1,0 +1,45 @@
+# Gradle, Android Studio and generated build state
+.gradle/
+**/.gradle/
+build/
+**/build/
+.kotlin/
+**/.kotlin/
+.idea/
+**/.idea/
+*.iml
+local.properties
+**/local.properties
+.cxx/
+**/.cxx/
+.externalNativeBuild/
+**/.externalNativeBuild/
+captures/
+**/captures/
+ui.xml
+**/ui.xml
+
+# Build products and signing material must never be committed
+*.apk
+*.aab
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+*.pk8
+*.der
+
+# Local-only configuration and secrets
+.env
+.env.*
+**/secrets.properties
+**/keystore.properties
+**/*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local test audio (copyrighted / machine-specific media)
+NotchedMusic-Phone/testdata/

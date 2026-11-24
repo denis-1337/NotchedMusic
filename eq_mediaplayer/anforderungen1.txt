@@ -1,0 +1,53 @@
+neues projekt planen:
+android app für smartphone entwickelt mit android studio (ist installiert)
+testen mit virtuellen device -> checke ob du da meine hilfe bei der einrichtung brauchst.
+zielplattform: google pixel 10, android 17
+projektordner: Z:\android_projekte\NotchedMusic\NotchedMusic-Phone
+mockups für die gui: Z:\android_projekte\NotchedMusic\eq_mediaplayer
+anforderung:
+die app soll für tinnitus retraining (notched music) sein. abspielen über bluetooth headphones. 
+mit synchronisation über bluetooth für eine app auf der smartwatch, welche die gleiche funktionalität hat, aber durch diese smartphne app "synchronisiert" wird und ihre musik und einstellungen der filter übertragen bekommt, da die uhr keine großzügig ausgelegte gui bereitstellen kann.
+die uhr app wird gesondert entwickelt, die api dazwischen später ausgebaut - sync buttons vorherst "mockup" 
+
+musikplayer page:
+root folder mit musik soll definiert werden können (setup menü)
+ordner und songs (mp3s) dort drin sollen folgendermaßen genutzt werden:
+- root-ordner und jeder unterordner soll im player auswählbar sein (vor zurück tasten)
+- titel (files) sollen dann in der titelauswahl (vor zurück tasten) gewählt werden können. wenn es noch mehr unterordner in einem unterordner gibt, sollen diese ignoriert werden - also flache hirarchie. die files sollen aber in den ordnern für die titelauswahl/player ausgelesen werden (rekursiv). 
+dh. effektiv kann man zwischen root ordner und ordner eine stufe darunter wählen - alles dort drin wird dann rekursiv verwendet.
+weiteres:
+- play / stop funktion
+- automatische album cover über internet abfrage bei entsprechenden unterstützten musikfiles
+- format: mp3 und gängige formate (prio mp3) - nur musik
+- volume durch system oder in app steuerbar (regler unten)
+- eq bypass (off by default) kann bei aktivierung alle filter bypassen (inkl volume gain usw der filter)
+- preset wahl dropdown unten rechts wählt preset aus, das aktiv sein soll.
+
+EQ page:
+- es können drei presets mit jeweils 6 filtern definiert werden (lokal gespeichert, übertragbar an smartwatch)
+- filter können angewählt werden mit klick darauf (blauer ramen = gewählt, grün = on)
+- filtereigenschaften können ausgewählt und editiert werden wenn ein filter gewählt ist
+- type: off = filter bypass, notch, bell, highshelf, lowshelf, lowcut, highcut sollen unterstützt werden
+- freq, q, gain, volume per eingabe über editfeld (tastatur)
+- volume soll eine art trim oder preamp gain sein, der clipping verhindern soll, falls das signal über 0dbfs kommt in der kette - damit kann man dann nachregeln/gain reduzieren -> eventuell 
+- softlimiter generell strategisch richtig setzen damit es kein clipping an der übergaben zum OS gibt. - anzeige dass es clipt auf player seite bei volume slider
+
+setup page:
+send to watch öffnet page für sync zur smartwatch
+
+select root folder ist selbstsprechend - app benötigt zugriff auf musikfolder -> rechte müssen bei appstart und verwendung überprüft und angefordert werden.
+
+play sine wave:
+zur tinnitus ton ermittlung soll die schaltfläche einen sinuston wiedergeben, der eingestellt werden kann
+freq mit slider grob (10hz schritte) und mit + - schaltflächen in 1hz schritte
+volume für die testlaustärke
+
+synchronize page:
+rootfolder soll aufgelistet werden + unterfolder (1 ebene)
+markierte einträge sollen über button sync musik an die smartwatch übertragen werden können (protokoll folgt, api wird später zusammen mit der app auf uhr später implementiert)
+der button sync eq's überträgt dann auch über die api an die smartwatch alle presets und deren filtereinstellungen damit die uhr autark ohne smartphone die gleiche funktionalität hat (musik mit filter abspielen über bluetooth)
+
+prämissen:
+performance optimierte algorithmen (dsp) und datenstrukturen.
+stabile architektur (kommt mit vielen musik-formaten klar, keine bluetooth abspiel probleme, api idiotensicher, rechte automatisch einfordernd und abcheckend)
+die app soll für technik-unaffine benutzer funktionieren. die tinnitus frequenz-filter einstellungen sind aber bewust so fein einstellbar, da es wichtig ist ,dass dies so akkurat funktioniert. 
