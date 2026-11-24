@@ -1,6 +1,7 @@
 package de.notchedmusic.phone.playback
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.DefaultMediaNotificationProvider
@@ -92,8 +93,18 @@ class PlaybackService : MediaSessionService() {
     super.onDestroy()
   }
 
-  private companion object {
-    const val SESSION_ID = "notched-phone"
-    const val REQUEST_CODE_OPEN_APP = 0
+  companion object {
+    private const val SESSION_ID = "notched-phone"
+    private const val REQUEST_CODE_OPEN_APP = 0
+
+    /**
+     * Startet den Dienst aus einer sichtbaren Activity oder während einer Nutzeraktion.
+     *
+     * Der Aufruf ist idempotent. Android kann den Start im Hintergrund verweigern; dann muss der
+     * nächste sichtbare Lebenszyklus den Dienst erneut anfordern.
+     */
+    fun start(context: Context) {
+      context.startService(Intent(context, PlaybackService::class.java))
+    }
   }
 }

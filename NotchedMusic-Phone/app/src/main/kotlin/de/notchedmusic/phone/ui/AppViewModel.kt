@@ -21,6 +21,7 @@ import de.notchedmusic.phone.data.LibrarySnapshot
 import de.notchedmusic.phone.data.LibraryTrack
 import de.notchedmusic.phone.data.ScanResult
 import de.notchedmusic.phone.playback.PlaybackEngine
+import de.notchedmusic.phone.playback.PlaybackService
 import de.notchedmusic.phone.playback.PlaybackUiState
 import de.notchedmusic.phone.stats.StatsUiState
 import de.notchedmusic.phone.sync.SyncUiState
@@ -206,7 +207,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         ?.let { documentId -> tracks.indexOfFirst { it.documentId == documentId }.takeIf { it >= 0 } }
         ?: 0
     val wasPlaying = playback.value.isPlaying
-    PlaybackEngine.setQueue(tracks, startIndex = startIndex, autoPlay = wasPlaying && tracks.isNotEmpty())
+    val autoPlay = wasPlaying && tracks.isNotEmpty()
+    if (autoPlay) ensurePlaybackService()
+    PlaybackEngine.setQueue(tracks, startIndex = startIndex, autoPlay = autoPlay)
     val track = tracks.getOrNull(startIndex)
     _currentTrack.value = track
     refreshCoverFor(track)
@@ -230,8 +233,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
   // ── Wiedergabe ────────────────────────────────────────────────────────────────
 
   fun togglePlayback() {
+    // Der Dienst muss vor dem Start laufen, sonst greift beim Sperren kein Vordergrundschutz.
+    ensurePlaybackService()
     PlaybackEngine.toggle()
     if (playback.value.errorMessage != null) PlaybackEngine.clearError()
+  }
+
+  private fun ensurePlaybackService() {
+    try {
+      PlaybackService.start(getApplication())
+    } catch (_: IllegalStateException) {
+      // Hintergrundstart verboten; die Activity holt den Dienst beim nächsten sichtbaren Start nach.
+    }
   }
 
   fun nextTrack() {

@@ -1,6 +1,5 @@
 package de.notchedmusic.phone
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,16 +20,27 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
 
     // Der Dienst hält MediaSession und ExoPlayer; die UI steuert denselben Spieler.
-    try {
-      startService(Intent(this, PlaybackService::class.java))
-    } catch (_: IllegalStateException) {
-      // Im Hintergrund verboten – die Wiedergabe startet dann beim ersten Play den Dienst.
-    }
+    ensurePlaybackService()
 
     setContent {
       NotchedMusicTheme {
         MainScreen(viewModel)
       }
+    }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    // Nach einer Sperre/Installation kann der erste Start verweigert worden sein. Beim sichtbaren
+    // Lebenszyklus wird er nachgeholt, bevor der Nutzer die Wiedergabe startet.
+    ensurePlaybackService()
+  }
+
+  private fun ensurePlaybackService() {
+    try {
+      PlaybackService.start(this)
+    } catch (_: IllegalStateException) {
+      // Android verbietet Starts im Hintergrund; der nächste sichtbare Start versucht es erneut.
     }
   }
 }
