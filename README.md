@@ -161,7 +161,9 @@ may be fetched from MusicBrainz/Cover Art Archive and the iTunes Search API when
 metadata; only title, artist and album are sent. No file paths or listening history leave the
 device. Without network access, a placeholder cover is shown.
 
-## Project ownership
+## License
 
-This is a private personal project. The code and documentation are not licensed for redistribution
-unless a separate licence is added.
+NotchedMusic is licensed under the Apache License, Version 2.0.
+You may use, modify and redistribute the code and documentation under the terms
+of that license. See `LICENSE` for the full text and `NOTICE` for third-party
+components and attributions.

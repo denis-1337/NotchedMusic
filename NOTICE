@@ -1,0 +1,22 @@
+NotchedMusic (phone and Wear OS apps, shared core module)
+Copyright 2026 denis-1337
+
+Licensed under the Apache License, Version 2.0. See LICENSE for the full text.
+
+This project does not bundle third-party source code. It depends on external
+libraries that are resolved by Gradle at build time and keep their own licenses:
+
+* AndroidX Core, Activity, Lifecycle, Compose (Material 3, Wear Compose),
+  DataStore and Navigation 3 - Apache 2.0
+  https://developer.android.com/jetpack
+* AndroidX Media3 (ExoPlayer, Common, Session) - Apache 2.0
+  https://github.com/androidx/media
+* Kotlin standard library, kotlinx.coroutines and kotlinx.serialization - Apache 2.0
+  https://github.com/JetBrains/kotlin
+* JUnit 4 - EPL 1.0 / GPL 2.0 with Classpath Exception (test dependency only)
+* Google Play services for Wear OS - Google Terms of Service
+  https://developers.google.com/android/guides/terms
+
+Album cover lookup uses the public MusicBrainz/Cover Art Archive and iTunes
+Search APIs. Only track title, artist and album are sent; no third-party code
+from those services is included in this repository.
